@@ -1,0 +1,26 @@
+# Downloads folder
+downloads/
+*.part
+*.ytdl
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local user data & state
+pending_downloads.json
+downloads_history.json
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

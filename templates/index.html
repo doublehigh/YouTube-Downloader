@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rhamify Studio &mdash; Ultra Fast &amp; Modern YouTube Downloader</title>
+  <meta name="description" content="Download YouTube videos, shorts, audio, and playlists in ultra-high quality with modern real-time progress and sleek aesthetics.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Ambient background glow effects -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Rhamify Studio</span>
+          <span class="brand-badge">PRO</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- FFmpeg Indicator -->
+        <div id="ffmpeg-badge" class="status-pill tooltip-trigger" data-tooltip="Checking FFmpeg...">
+          <span class="status-dot"></span>
+          <span class="status-label">FFmpeg</span>
+        </div>
+
+        <!-- Open Folder Button -->
+        <button id="btn-open-folder" class="btn-ghost" title="Open Downloads Folder">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="btn-text">Folder</span>
+        </button>
+
+        <!-- History Button -->
+        <button id="btn-toggle-history" class="btn-ghost" title="View Download History">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span class="btn-text">History</span>
+          <span id="history-badge-count" class="badge-count">0</span>
+        </button>
+
+        <!-- Settings Button -->
+        <button id="btn-toggle-settings" class="btn-icon" title="Preferences">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero Headline -->
+      <section class="hero-section">
+        <h1 class="hero-title">
+          Download <span class="gradient-text">Anything</span> from YouTube
+        </h1>
+        <p class="hero-subtitle">
+          Blazing fast 4K video, crystal clear MP3 audio, Shorts & Playlists in seconds.
+        </p>
+
+        <!-- Search / URL Input Box -->
+        <div class="input-card">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              id="url-input" 
+              placeholder="Paste YouTube video, shorts, or playlist URL here..." 
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="btn-paste" class="btn-input-action" title="Paste from clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+              <span>Paste</span>
+            </button>
+          </div>
+          <button id="btn-inspect" class="btn-primary">
+            <span class="btn-spinner" style="display:none;"></span>
+            <span class="btn-label">Analyze</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Video Inspection / Preview Card (Dynamic) -->
+      <section id="preview-section" class="preview-section" style="display: none;">
+        <div class="glass-card preview-card">
+          <div class="preview-media">
+            <div class="thumb-container">
+              <img id="preview-thumb" src="" alt="Thumbnail" />
+              <span id="preview-duration" class="duration-tag">00:00</span>
+              <span id="preview-badge" class="hd-badge">HD</span>
+            </div>
+          </div>
+
+          <div class="preview-details">
+            <div class="preview-header">
+              <h2 id="preview-title" class="video-title">Video Title</h2>
+              <div class="video-meta">
+                <span id="preview-channel" class="channel-name">Channel</span>
+                <span class="meta-dot">•</span>
+                <span id="preview-views" class="view-count">0 views</span>
+              </div>
+            </div>
+
+            <!-- Format Mode Switcher -->
+            <div class="format-switcher">
+              <button id="tab-video" class="format-tab active" data-mode="video">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+                <span>Video (MP4)</span>
+              </button>
+              <button id="tab-audio" class="format-tab" data-mode="audio">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                <span>Audio (MP3)</span>
+              </button>
+            </div>
+
+            <!-- Quality & Options Panel -->
+            <div class="options-container">
+              <!-- Video Options -->
+              <div id="video-options" class="options-group">
+                <div class="options-label-row">
+                  <label class="group-label">Select Resolution:</label>
+                  <span id="auto-res-notice" class="auto-res-badge" style="display: none;"></span>
+                </div>
+                <div id="resolution-chips" class="chip-group">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+              <!-- Audio Options -->
+              <div id="audio-options" class="options-group" style="display: none;">
+                <label class="group-label">Select Audio Codec:</label>
+                <div class="chip-group">
+                  <button class="chip active" data-audio-format="mp3">MP3 (Universal)</button>
+                  <button class="chip" data-audio-format="m4a">M4A (Apple / AAC)</button>
+                  <button class="chip" data-audio-format="wav">WAV (Lossless)</button>
+                  <button class="chip" data-audio-format="opus">OPUS (Modern)</button>
+                </div>
+              </div>
+
+              <!-- Playlist items count indicator if playlist -->
+              <div id="playlist-notice" class="playlist-notice" style="display: none;">
+                <div class="playlist-notice-left">
+                  <span class="playlist-icon">📑</span>
+                  <span id="playlist-info-text">Playlist: 0 videos found</span>
+                </div>
+                <label class="checkbox-container">
+                  <input type="checkbox" id="chk-full-playlist" checked>
+                  <span>Download entire playlist</span>
+                </label>
+              </div>
+
+              <!-- Playlist Video Selection Panel (Shown when "Download entire playlist" is unchecked) -->
+              <div id="playlist-selection-panel" class="playlist-selection-panel" style="display: none;">
+                <div class="playlist-selection-header">
+                  <div class="playlist-selection-stats">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 11 12 14 22 4"></polyline>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span id="playlist-selected-count">0 of 0 selected</span>
+                  </div>
+                  <div class="playlist-selection-actions">
+                    <button type="button" id="btn-playlist-select-all" class="btn-playlist-action" title="Select all videos in playlist">Select All</button>
+                    <span class="action-sep">•</span>
+                    <button type="button" id="btn-playlist-deselect-all" class="btn-playlist-action" title="Deselect all videos">Deselect All</button>
+                  </div>
+                </div>
+
+                <!-- Fast Filter Input -->
+                <div class="playlist-filter-bar">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" id="playlist-filter-input" class="playlist-filter-input" placeholder="Filter videos by title..." autocomplete="off" spellcheck="false" />
+                </div>
+
+                <!-- Video Items List -->
+                <div id="playlist-items-list" class="playlist-items-list">
+                  <!-- Injected via JavaScript -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Download Action Button -->
+            <div class="action-footer">
+              <button id="btn-download" class="btn-download">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span id="download-btn-text">Download Now</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Active Downloads Section -->
+      <section class="downloads-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="pulse-dot"></span> Active Tasks
+          </h3>
+          <span id="active-tasks-count" class="tasks-counter">0 running</span>
+        </div>
+
+        <div id="active-tasks-container" class="tasks-list">
+          <div id="no-tasks-empty" class="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p>No active downloads right now. Enter a URL above to begin!</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Slide-over History Drawer -->
+    <div id="history-drawer" class="drawer">
+      <div class="drawer-overlay"></div>
+      <div class="drawer-content">
+        <div class="drawer-header">
+          <div class="drawer-title-group">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <h3>Download History</h3>
+          </div>
+          <div class="drawer-header-actions">
+            <button id="btn-clear-history" class="btn-subtle-danger" title="Clear all history">Clear All</button>
+            <button id="btn-close-history" class="btn-icon">✕</button>
+          </div>
+        </div>
+
+        <div id="history-list" class="drawer-list">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Preferences</h3>
+          <button id="btn-close-settings" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Save Downloads To:</label>
+            <div class="path-input-group">
+              <input type="text" id="setting-download-dir" placeholder="C:\Users\..." />
+              <button id="btn-save-dir" class="btn-secondary">Save</button>
+            </div>
+            <p class="form-hint">Files are saved to this folder automatically.</p>
+          </div>
+
+          <div class="form-group">
+            <label>Default Preferred Resolution:</label>
+            <select id="setting-preferred-res" class="custom-select">
+              <option value="auto">⚡ Best Available (Auto)</option>
+              <option value="2160">2160p (4K Ultra HD)</option>
+              <option value="1440">1440p (2K Quad HD)</option>
+              <option value="1080" selected>1080p (Full HD)</option>
+              <option value="720">720p (HD)</option>
+              <option value="480">480p (Standard)</option>
+              <option value="360">360p (Data Saver)</option>
+            </select>
+            <p class="form-hint">Automatically chooses the closest available resolution if preferred is not available.</p>
+          </div>
+
+          <div class="form-group">
+            <label>FFmpeg Status & Troubleshooting:</label>
+            <div id="settings-ffmpeg-info" class="ffmpeg-info-box">
+              Checking status...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -13,12 +13,34 @@ Usage examples:
 """
 
 import argparse
+import os
+import shutil
 import sys
+from pathlib import Path
 
 try:
     import yt_dlp
 except ImportError:
     sys.exit("yt-dlp is not installed. Install it with: pip install yt-dlp")
+
+BASE_DIR = Path(__file__).resolve().parent
+
+def get_ffmpeg_path():
+    """Find ffmpeg.exe from project root, system PATH, or imageio-ffmpeg."""
+    local_ffmpeg = BASE_DIR / "ffmpeg.exe"
+    if local_ffmpeg.exists():
+        return str(local_ffmpeg)
+    system_ffmpeg = shutil.which("ffmpeg")
+    if system_ffmpeg:
+        return system_ffmpeg
+    try:
+        import imageio_ffmpeg
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        if os.path.exists(exe):
+            return exe
+    except Exception:
+        pass
+    return None
 
 
 def build_ydl_opts(args):
@@ -35,6 +57,10 @@ def build_ydl_opts(args):
         "no_warnings": False,
     }
 
+    ffmpeg_exe = get_ffmpeg_path()
+    if ffmpeg_exe:
+        opts["ffmpeg_location"] = ffmpeg_exe
+
     if args.audio_only:
         opts["format"] = "bestaudio/best"
         opts["postprocessors"] = [{
@@ -45,7 +71,8 @@ def build_ydl_opts(args):
     elif args.resolution:
         opts["format"] = (
             f"bestvideo[height<={args.resolution}]+bestaudio/"
-            f"best[height<={args.resolution}]"
+            f"best[height<={args.resolution}]/"
+            f"bestvideo+bestaudio/best"
         )
     else:
         opts["format"] = "bestvideo+bestaudio/best"
@@ -123,14 +150,31 @@ def parse_args():
         help="Download the entire playlist instead of a single video"
     )
 
+    parser.add_argument(
+        "--ui", action="store_true",
+        help="Launch the YouTube Downloader Studio web UI"
+    )
+
     args = parser.parse_args()
+
+    if args.ui:
+        import subprocess
+        subprocess.run([sys.executable, "app.py"])
+        sys.exit(0)
 
     urls = list(args.urls)
     if args.from_file:
         urls.extend(read_urls_from_file(args.from_file))
 
     if not urls:
-        parser.error("No URLs provided. Pass URLs directly or use --from-file.")
+        print("No URLs provided.")
+        choice = input("Would you like to launch the YouTube Downloader Studio UI? (Y/n): ").strip().lower()
+        if choice in ("", "y", "yes"):
+            import subprocess
+            subprocess.run([sys.executable, "app.py"])
+            sys.exit(0)
+        else:
+            parser.error("No URLs provided. Pass URLs directly, use --from-file, or launch with --ui.")
 
     args.urls = urls
     return args
