@@ -3,12 +3,34 @@
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Elements
+  // Elements: Single Mode
+  const tabModeSingle = document.getElementById('tab-mode-single');
+  const tabModeBatch = document.getElementById('tab-mode-batch');
+  const singleInputContainer = document.getElementById('single-input-container');
+  const batchInputContainer = document.getElementById('batch-input-container');
+
   const urlInput = document.getElementById('url-input');
   const btnPaste = document.getElementById('btn-paste');
   const btnInspect = document.getElementById('btn-inspect');
-  const btnSpinner = btnInspect.querySelector('.btn-spinner');
-  const btnLabel = btnInspect.querySelector('.btn-label');
+  const btnSpinner = btnInspect ? btnInspect.querySelector('.btn-spinner') : null;
+  const btnLabel = btnInspect ? btnInspect.querySelector('.btn-label') : null;
+
+  // Elements: Batch Mode
+  const batchUrlsInput = document.getElementById('batch-urls-input');
+  const batchLinksBadge = document.getElementById('batch-links-badge');
+  const btnBatchPaste = document.getElementById('btn-batch-paste');
+  const btnBatchImport = document.getElementById('btn-batch-import');
+  const batchFileInput = document.getElementById('batch-file-input');
+  const btnBatchClear = document.getElementById('btn-batch-clear');
+  const batchTabVideo = document.getElementById('batch-tab-video');
+  const batchTabAudio = document.getElementById('batch-tab-audio');
+  const batchVideoResGroup = document.getElementById('batch-video-res-group');
+  const batchAudioFormatGroup = document.getElementById('batch-audio-format-group');
+  const batchResolutionSelect = document.getElementById('batch-resolution-select');
+  const batchAudioSelect = document.getElementById('batch-audio-select');
+  const batchConcurrencySelect = document.getElementById('batch-concurrency-select');
+  const btnBatchDownload = document.getElementById('btn-batch-download');
+  const batchDlBtnText = document.getElementById('batch-dl-btn-text');
 
   // Preview Section
   const previewSection = document.getElementById('preview-section');
@@ -35,10 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnDownload = document.getElementById('btn-download');
   const downloadBtnText = document.getElementById('download-btn-text');
 
-  // Tasks Section
+  // Tasks Section & Batch Summary
   const activeTasksContainer = document.getElementById('active-tasks-container');
   const noTasksEmpty = document.getElementById('no-tasks-empty');
   const activeTasksCount = document.getElementById('active-tasks-count');
+
+  const batchSummaryBar = document.getElementById('batch-summary-bar');
+  const batchSummaryStats = document.getElementById('batch-summary-stats');
+  const batchSummaryFill = document.getElementById('batch-summary-fill');
+  const btnBatchPauseAll = document.getElementById('btn-batch-pause-all');
+  const btnBatchResumeAll = document.getElementById('btn-batch-resume-all');
+  const btnBatchClearDone = document.getElementById('btn-batch-clear-done');
+  const btnBatchCancelAll = document.getElementById('btn-batch-cancel-all');
 
   // System & Header
   const ffmpegBadge = document.getElementById('ffmpeg-badge');
@@ -57,26 +87,150 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseSettings = document.getElementById('btn-close-settings');
   const settingDownloadDir = document.getElementById('setting-download-dir');
   const settingPreferredRes = document.getElementById('setting-preferred-res');
+  const settingMaxConcurrent = document.getElementById('setting-max-concurrent');
   const btnSaveDir = document.getElementById('btn-save-dir');
   const settingsFfmpegInfo = document.getElementById('settings-ffmpeg-info');
 
+  // Folder Drawer & Media Preview Elements
+  const folderDrawer = document.getElementById('folder-drawer');
+  const btnCloseFolder = document.getElementById('btn-close-folder');
+  const btnRefreshFolder = document.getElementById('btn-refresh-folder');
+  const btnRevealOsExplorer = document.getElementById('btn-reveal-os-explorer');
+  const folderDrawerPath = document.getElementById('folder-drawer-path');
+  const folderSearchInput = document.getElementById('folder-search-input');
+  const folderStatsSummary = document.getElementById('folder-stats-summary');
+  const folderFilesList = document.getElementById('folder-files-list');
+
+  const mediaPreviewModal = document.getElementById('media-preview-modal');
+  const btnCloseMedia = document.getElementById('btn-close-media');
+  const mediaPreviewTitle = document.getElementById('media-preview-title');
+  const previewVideoPlayer = document.getElementById('preview-video-player');
+  const previewAudioPlayer = document.getElementById('preview-audio-player');
+
   const toastContainer = document.getElementById('toast-container');
 
+  // Universal Downloader & Supported Sites Elements
+  const inputDetectedPlatform = document.getElementById('input-detected-platform');
+  const previewPlatformBadge = document.getElementById('preview-platform-badge');
+  const supportedSitesModal = document.getElementById('supported-sites-modal');
+  const btnOpenSupportedSites = document.getElementById('btn-open-supported-sites');
+  const btnMorePlatforms = document.getElementById('btn-more-platforms');
+  const btnCloseSupportedSites = document.getElementById('btn-close-supported-sites');
+  const sitesSearchInput = document.getElementById('sites-search-input');
+
   // State
+  let activeInputMode = 'single'; // 'single' or 'batch'
+  let batchMode = 'video'; // 'video' or 'audio'
+  let batchUrls = [];
+  let tasksMap = new Map(); // taskId -> task object
+
   let currentVideoData = null;
   let selectedMode = 'video'; // 'video' or 'audio'
   let preferredResolution = localStorage.getItem('preferred_resolution') || '1080';
   let selectedResolution = null;
   let selectedAudioFormat = 'mp3';
-  let selectedPlaylistIndices = new Set(); // Set of 1-based indices currently selected
+  let selectedPlaylistIndices = new Set();
   let activeTaskStreams = new Map(); // taskId -> EventSource
   let runningTasksCount = 0;
+
+  // Platform Detection Helper
+  function detectPlatform(url) {
+    if (!url) return null;
+    const u = url.toLowerCase();
+    if (u.includes('youtube.com') || u.includes('youtu.be')) {
+      return { name: 'YouTube', icon: '▶️', pillClass: 'pill-youtube', color: '#ff0033' };
+    }
+    if (u.includes('tiktok.com')) {
+      return { name: 'TikTok', icon: '🎵', pillClass: 'pill-tiktok', color: '#00f2fe' };
+    }
+    if (u.includes('instagram.com')) {
+      return { name: 'Instagram', icon: '📸', pillClass: 'pill-instagram', color: '#e1306c' };
+    }
+    if (u.includes('twitter.com') || u.includes('x.com')) {
+      return { name: 'X / Twitter', icon: '🐦', pillClass: 'pill-twitter', color: '#1d9bf0' };
+    }
+    if (u.includes('facebook.com') || u.includes('fb.watch')) {
+      return { name: 'Facebook', icon: '🔷', pillClass: 'pill-facebook', color: '#1877f2' };
+    }
+    if (u.includes('reddit.com')) {
+      return { name: 'Reddit', icon: '🤖', pillClass: 'pill-reddit', color: '#ff4500' };
+    }
+    if (u.includes('vimeo.com')) {
+      return { name: 'Vimeo', icon: '🎬', pillClass: 'pill-vimeo', color: '#1ab7ea' };
+    }
+    if (u.includes('twitch.tv')) {
+      return { name: 'Twitch', icon: '👾', pillClass: 'pill-twitch', color: '#9146ff' };
+    }
+    if (u.includes('soundcloud.com')) {
+      return { name: 'SoundCloud', icon: '☁️', pillClass: 'pill-soundcloud', color: '#ff5500' };
+    }
+    if (u.includes('pinterest.com') || u.includes('pin.it')) {
+      return { name: 'Pinterest', icon: '📌', pillClass: 'pill-pinterest', color: '#e60023' };
+    }
+    if (u.includes('bilibili.com')) {
+      return { name: 'Bilibili', icon: '📺', pillClass: 'pill-bilibili', color: '#23ade5' };
+    }
+    if (u.includes('dailymotion.com')) {
+      return { name: 'Dailymotion', icon: '🎞️', pillClass: 'pill-dailymotion', color: '#0066dc' };
+    }
+    if (u.startsWith('http://') || u.startsWith('https://')) {
+      return { name: 'Web Video', icon: '🌐', pillClass: 'pill-generic', color: '#10b981' };
+    }
+    return null;
+  }
+
+  function updateInputPlatformDetection() {
+    if (!urlInput || !inputDetectedPlatform) return;
+    const val = urlInput.value.trim();
+    const plat = detectPlatform(val);
+    if (plat) {
+      inputDetectedPlatform.textContent = `${plat.icon} ${plat.name}`;
+      inputDetectedPlatform.style.display = 'inline-flex';
+    } else {
+      inputDetectedPlatform.style.display = 'none';
+    }
+  }
+
+  // Universal Regex to extract any URLs (YouTube, TikTok, Instagram, Twitter/X, Facebook, etc.)
+  const UNIVERSAL_URL_REGEX = /(https?:\/\/[^\s<>"'{}|\\^`]+)/gi;
+
+  function extractMediaUrls(text) {
+    if (!text) return [];
+    const matches = text.match(UNIVERSAL_URL_REGEX) || [];
+    const seen = new Set();
+    const result = [];
+    matches.forEach(m => {
+      const clean = m.trim().replace(/[.,;:!?"'()\[\]{}<>]+$/, '');
+      if (clean && !seen.has(clean)) {
+        seen.add(clean);
+        result.push(clean);
+      }
+    });
+    // Fallback line-by-line check
+    if (result.length === 0) {
+      text.split('\n').forEach(line => {
+        const l = line.trim().replace(/[.,;:!?"'()\[\]{}<>]+$/, '');
+        if ((l.startsWith('http://') || l.startsWith('https://')) && !seen.has(l)) {
+          seen.add(l);
+          result.push(l);
+        }
+      });
+    }
+    return result;
+  }
+  // Alias for backward compatibility across existing calls
+  const extractYoutubeUrls = extractMediaUrls;
 
   // Initialize
   initSystem();
   loadHistory();
   setupEventListeners();
   checkPendingDownloads();
+
+  // Check if URL requests downloads/folder view
+  if (window.location.pathname.includes('/downloads') || window.location.search.includes('view=folder') || window.location.search.includes('tab=folder')) {
+    openLocalFolder(null, { openDrawer: true, triggerOs: false });
+  }
 
   // --- Initial System Setup ---
   async function initSystem() {
@@ -104,6 +258,35 @@ document.addEventListener('DOMContentLoaded', () => {
       if (settingPreferredRes) {
         settingPreferredRes.value = preferredResolution;
       }
+      if (settingMaxConcurrent && data.max_concurrent_downloads) {
+        settingMaxConcurrent.value = String(data.max_concurrent_downloads);
+      }
+
+      // Mobile & Local Network URL
+      if (data.local_ip) {
+        const mobileUrlEl = document.getElementById('mobile-access-url');
+        const mobilePort = data.port || 5000;
+        if (mobileUrlEl) {
+          mobileUrlEl.textContent = `http://${data.local_ip}:${mobilePort}`;
+        }
+      }
+
+      const btnCopyMobile = document.getElementById('btn-copy-mobile-url');
+      if (btnCopyMobile) {
+        btnCopyMobile.onclick = async () => {
+          const urlEl = document.getElementById('mobile-access-url');
+          if (urlEl && urlEl.textContent && !urlEl.textContent.includes('Loading')) {
+            try {
+              await navigator.clipboard.writeText(urlEl.textContent.trim());
+              btnCopyMobile.textContent = 'Copied!';
+              showToast('Mobile access URL copied to clipboard!', 'success');
+              setTimeout(() => { btnCopyMobile.textContent = 'Copy'; }, 2000);
+            } catch (e) {
+              showToast('Copy URL manually: ' + urlEl.textContent.trim(), 'info');
+            }
+          }
+        };
+      }
     } catch (err) {
       console.warn('System status check failed:', err);
     }
@@ -111,14 +294,139 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Event Listeners ---
   function setupEventListeners() {
+    // Mode Switcher Listeners
+    if (tabModeSingle) {
+      tabModeSingle.addEventListener('click', () => switchInputMode('single'));
+    }
+    if (tabModeBatch) {
+      tabModeBatch.addEventListener('click', () => switchInputMode('batch'));
+    }
+
+    // Live Platform Detection for Single Input
+    if (urlInput) {
+      urlInput.addEventListener('input', updateInputPlatformDetection);
+    }
+
+    // Auto-detect multi-line or multiple URLs when pasting into single input
+    urlInput.addEventListener('paste', (e) => {
+      setTimeout(() => {
+        updateInputPlatformDetection();
+        const val = urlInput.value.trim();
+        const urls = extractYoutubeUrls(val);
+        if (urls.length > 1 || val.includes('\n')) {
+          switchInputMode('batch');
+          if (batchUrlsInput) {
+            batchUrlsInput.value = val;
+            updateBatchUrlsCount();
+          }
+          showToast(`⚡ Detected ${urls.length} links! Switched to Batch Mode.`, 'info');
+        }
+      }, 50);
+    });
+
+    // Batch Toolbar Actions
+    if (btnBatchPaste) {
+      btnBatchPaste.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            if (batchUrlsInput.value.trim()) {
+              batchUrlsInput.value += '\n' + text.trim();
+            } else {
+              batchUrlsInput.value = text.trim();
+            }
+            updateBatchUrlsCount();
+            showToast('URLs pasted from clipboard', 'info');
+          }
+        } catch (err) {
+          showToast('Clipboard access denied. Please paste manually.', 'error');
+        }
+      });
+    }
+
+    if (btnBatchImport && batchFileInput) {
+      btnBatchImport.addEventListener('click', () => batchFileInput.click());
+      batchFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const content = evt.target.result || '';
+          if (batchUrlsInput.value.trim()) {
+            batchUrlsInput.value += '\n' + content.trim();
+          } else {
+            batchUrlsInput.value = content.trim();
+          }
+          updateBatchUrlsCount();
+          showToast(`Imported ${file.name}`, 'success');
+          batchFileInput.value = '';
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    if (btnBatchClear) {
+      btnBatchClear.addEventListener('click', () => {
+        batchUrlsInput.value = '';
+        updateBatchUrlsCount();
+        showToast('Batch URLs cleared', 'info');
+      });
+    }
+
+    if (batchUrlsInput) {
+      batchUrlsInput.addEventListener('input', updateBatchUrlsCount);
+    }
+
+    if (batchTabVideo) {
+      batchTabVideo.addEventListener('click', () => setBatchFormatMode('video'));
+    }
+    if (batchTabAudio) {
+      batchTabAudio.addEventListener('click', () => setBatchFormatMode('audio'));
+    }
+
+    if (batchResolutionSelect) {
+      batchResolutionSelect.addEventListener('change', updateBatchUrlsCount);
+    }
+    if (batchAudioSelect) {
+      batchAudioSelect.addEventListener('change', updateBatchUrlsCount);
+    }
+
+    if (btnBatchDownload) {
+      btnBatchDownload.addEventListener('click', triggerBatchDownload);
+    }
+
+    // Batch Summary Bar Actions
+    if (btnBatchPauseAll) {
+      btnBatchPauseAll.addEventListener('click', pauseAllTasks);
+    }
+    if (btnBatchResumeAll) {
+      btnBatchResumeAll.addEventListener('click', resumeAllTasks);
+    }
+    if (btnBatchClearDone) {
+      btnBatchClearDone.addEventListener('click', clearCompletedTasks);
+    }
+    if (btnBatchCancelAll) {
+      btnBatchCancelAll.addEventListener('click', cancelAllTasks);
+    }
+
     // Paste button
     btnPaste.addEventListener('click', async () => {
       try {
         const text = await navigator.clipboard.readText();
         if (text) {
           urlInput.value = text.trim();
-          showToast('URL pasted from clipboard', 'info');
-          inspectUrl();
+          const urls = extractYoutubeUrls(text);
+          if (urls.length > 1 || text.includes('\n')) {
+            switchInputMode('batch');
+            if (batchUrlsInput) {
+              batchUrlsInput.value = text.trim();
+              updateBatchUrlsCount();
+            }
+            showToast(`⚡ Detected ${urls.length} links! Switched to Batch Mode.`, 'info');
+          } else {
+            showToast('URL pasted from clipboard', 'info');
+            inspectUrl();
+          }
         }
       } catch (err) {
         showToast('Clipboard access denied. Please paste manually.', 'error');
@@ -176,8 +484,50 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Folder Actions
-    btnOpenFolder.addEventListener('click', () => openLocalFolder());
+    // Folder Actions - opens both the in-app folder drawer and the native OS Explorer
+    btnOpenFolder.addEventListener('click', () => {
+      openLocalFolder(null, { openDrawer: true, triggerOs: true });
+    });
+
+    if (btnCloseFolder && folderDrawer) {
+      btnCloseFolder.addEventListener('click', () => closeDrawer(folderDrawer));
+      folderDrawer.querySelector('.drawer-overlay').addEventListener('click', () => closeDrawer(folderDrawer));
+    }
+
+    if (btnRefreshFolder) {
+      btnRefreshFolder.addEventListener('click', () => loadFolderFiles());
+    }
+
+    if (btnRevealOsExplorer) {
+      btnRevealOsExplorer.addEventListener('click', async () => {
+        try {
+          const res = await fetch('/api/open-folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('Opening Windows File Explorer...', 'info');
+          } else {
+            showToast('Could not open folder in Explorer', 'error');
+          }
+        } catch {
+          showToast('Could not open folder in Explorer', 'error');
+        }
+      });
+    }
+
+    if (folderSearchInput) {
+      folderSearchInput.addEventListener('input', (e) => {
+        filterFolderFiles(e.target.value);
+      });
+    }
+
+    if (btnCloseMedia && mediaPreviewModal) {
+      btnCloseMedia.addEventListener('click', () => closeMediaPreview());
+      mediaPreviewModal.querySelector('.modal-overlay').addEventListener('click', () => closeMediaPreview());
+    }
 
     // Drawer & Modal Toggles
     btnToggleHistory.addEventListener('click', () => openDrawer(historyDrawer));
@@ -188,6 +538,39 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCloseSettings.addEventListener('click', () => closeModal(settingsModal));
     settingsModal.querySelector('.modal-overlay').addEventListener('click', () => closeModal(settingsModal));
 
+    // Supported Sites Modal Listeners
+    if (btnOpenSupportedSites && supportedSitesModal) {
+      btnOpenSupportedSites.addEventListener('click', () => openModal(supportedSitesModal));
+    }
+    if (btnMorePlatforms && supportedSitesModal) {
+      btnMorePlatforms.addEventListener('click', () => openModal(supportedSitesModal));
+    }
+    if (btnCloseSupportedSites && supportedSitesModal) {
+      btnCloseSupportedSites.addEventListener('click', () => closeModal(supportedSitesModal));
+      const overlay = supportedSitesModal.querySelector('.modal-overlay');
+      if (overlay) overlay.addEventListener('click', () => closeModal(supportedSitesModal));
+    }
+    if (sitesSearchInput) {
+      sitesSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.site-category-card');
+        cards.forEach(card => {
+          const chips = card.querySelectorAll('.site-chip');
+          let hasMatch = false;
+          chips.forEach(chip => {
+            const txt = chip.textContent.toLowerCase();
+            if (!query || txt.includes(query)) {
+              chip.style.display = '';
+              hasMatch = true;
+            } else {
+              chip.style.display = 'none';
+            }
+          });
+          card.style.display = hasMatch ? '' : 'none';
+        });
+      });
+    }
+
     // Save Settings
     btnSaveDir.addEventListener('click', async () => {
       const newPath = settingDownloadDir.value.trim();
@@ -195,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         preferredResolution = settingPreferredRes.value;
         localStorage.setItem('preferred_resolution', preferredResolution);
       }
+      const newConcurrent = settingMaxConcurrent ? parseInt(settingMaxConcurrent.value, 10) : 3;
       if (!newPath) return;
       try {
         const res = await fetch('/api/config', {
@@ -202,7 +586,8 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             download_dir: newPath,
-            preferred_quality: preferredResolution
+            preferred_quality: preferredResolution,
+            max_concurrent_downloads: newConcurrent
           })
         });
         const data = await res.json();
@@ -224,6 +609,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    if (settingMaxConcurrent) {
+      settingMaxConcurrent.addEventListener('change', async () => {
+        const newConcurrent = parseInt(settingMaxConcurrent.value, 10);
+        try {
+          await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ max_concurrent_downloads: newConcurrent })
+          });
+          showToast(`Concurrency updated to ${newConcurrent} simultaneous downloads`, 'info');
+        } catch (err) {
+          console.warn('Failed to update concurrency:', err);
+        }
+      });
+    }
+
     // Clear History
     btnClearHistory.addEventListener('click', async () => {
       if (!confirm('Are you sure you want to clear your download history?')) return;
@@ -240,11 +641,250 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Mode Switching (Single vs Batch) ---
+  function switchInputMode(mode) {
+    activeInputMode = mode;
+    if (mode === 'single') {
+      if (tabModeSingle) tabModeSingle.classList.add('active');
+      if (tabModeBatch) tabModeBatch.classList.remove('active');
+      if (singleInputContainer) singleInputContainer.style.display = 'flex';
+      if (batchInputContainer) batchInputContainer.style.display = 'none';
+      if (urlInput) urlInput.focus();
+    } else {
+      if (tabModeSingle) tabModeSingle.classList.remove('active');
+      if (tabModeBatch) tabModeBatch.classList.add('active');
+      if (singleInputContainer) singleInputContainer.style.display = 'none';
+      if (batchInputContainer) batchInputContainer.style.display = 'block';
+      if (previewSection) previewSection.style.display = 'none';
+      if (batchUrlsInput) {
+        batchUrlsInput.focus();
+        updateBatchUrlsCount();
+      }
+    }
+  }
+
+  // --- Batch Format Mode (Video vs Audio) ---
+  function setBatchFormatMode(mode) {
+    batchMode = mode;
+    if (mode === 'video') {
+      if (batchTabVideo) batchTabVideo.classList.add('active');
+      if (batchTabAudio) batchTabAudio.classList.remove('active');
+      if (batchVideoResGroup) batchVideoResGroup.style.display = 'flex';
+      if (batchAudioFormatGroup) batchAudioFormatGroup.style.display = 'none';
+    } else {
+      if (batchTabVideo) batchTabVideo.classList.remove('active');
+      if (batchTabAudio) batchTabAudio.classList.add('active');
+      if (batchVideoResGroup) batchVideoResGroup.style.display = 'none';
+      if (batchAudioFormatGroup) batchAudioFormatGroup.style.display = 'flex';
+    }
+    updateBatchUrlsCount();
+  }
+
+  // --- Batch URL Counter & Parsing ---
+  function updateBatchUrlsCount() {
+    if (!batchUrlsInput) return;
+    const text = batchUrlsInput.value;
+    batchUrls = extractYoutubeUrls(text);
+    const count = batchUrls.length;
+
+    if (count > 0) {
+      if (batchLinksBadge) {
+        batchLinksBadge.textContent = `${count} Link${count > 1 ? 's' : ''} Found`;
+        batchLinksBadge.classList.add('has-links');
+      }
+      if (btnBatchDownload) {
+        btnBatchDownload.disabled = false;
+        const typeLabel = batchMode === 'audio' ? 'Audio' : 'Video';
+        if (batchDlBtnText) {
+          batchDlBtnText.textContent = `Download All (${count} ${typeLabel}${count > 1 ? 's' : ''})`;
+        }
+      }
+    } else {
+      if (batchLinksBadge) {
+        batchLinksBadge.textContent = '0 Links Found';
+        batchLinksBadge.classList.remove('has-links');
+      }
+      if (btnBatchDownload) {
+        btnBatchDownload.disabled = true;
+        if (batchDlBtnText) {
+          batchDlBtnText.textContent = 'Paste links above to start';
+        }
+      }
+    }
+  }
+
+  // --- Trigger Batch Download ---
+  async function triggerBatchDownload() {
+    if (batchUrls.length === 0) {
+      showToast('Please enter at least 1 valid video link', 'error');
+      return;
+    }
+
+    const isAudio = batchMode === 'audio';
+    const audioFormat = batchAudioSelect ? batchAudioSelect.value : 'mp3';
+    const resolution = batchResolutionSelect ? batchResolutionSelect.value : 'auto';
+    const concurrency = batchConcurrencySelect ? parseInt(batchConcurrencySelect.value, 10) : 3;
+
+    if (btnBatchDownload) btnBatchDownload.disabled = true;
+    if (batchDlBtnText) batchDlBtnText.textContent = `Starting ${batchUrls.length} downloads...`;
+
+    try {
+      const res = await fetch('/api/batch-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          urls: batchUrls,
+          audio_only: isAudio,
+          audio_format: audioFormat,
+          resolution: resolution,
+          concurrency: concurrency,
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to start batch download.');
+      }
+
+      showToast(`⚡ Started batch download of ${data.count} links!`, 'success');
+      noTasksEmpty.style.display = 'none';
+
+      // Create cards for each task
+      (data.tasks || []).forEach(task => {
+        createTaskCard(task.task_id, {
+          title: task.title || 'Queued...',
+          thumbnail: task.thumbnail || '',
+          audio_only: task.audio_only,
+          audio_format: task.audio_format,
+          resolution: task.resolution,
+          status: 'queued',
+        });
+        tasksMap.set(task.task_id, {
+          id: task.task_id,
+          status: 'queued',
+          percent: 0,
+          title: task.title,
+        });
+        listenToTaskProgress(task.task_id);
+      });
+
+      // Clear batch input area and update count
+      batchUrlsInput.value = '';
+      updateBatchUrlsCount();
+      updateBatchSummary();
+
+      // Scroll to active downloads
+      activeTasksContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      showToast(err.message || 'Error starting batch download', 'error');
+      updateBatchUrlsCount();
+    }
+  }
+
+  // --- Batch Summary Overview ---
+  function updateBatchSummary() {
+    if (!batchSummaryBar) return;
+    const all = Array.from(tasksMap.values());
+    if (all.length === 0) {
+      batchSummaryBar.style.display = 'none';
+      return;
+    }
+
+    const completed = all.filter(t => t.status === 'completed').length;
+    const failed = all.filter(t => t.status === 'error').length;
+    const cancelled = all.filter(t => t.status === 'cancelled').length;
+    const active = all.filter(t => t.status === 'downloading' || t.status === 'starting').length;
+    const queued = all.filter(t => t.status === 'queued').length;
+    const paused = all.filter(t => t.status === 'paused').length;
+    const total = all.length;
+
+    batchSummaryBar.style.display = 'flex';
+    let statusText = `${completed} of ${total} Completed`;
+    if (active > 0) statusText += ` • ${active} Active`;
+    if (queued > 0) statusText += ` • ${queued} Queued`;
+    if (paused > 0) statusText += ` • ${paused} Paused`;
+    if (cancelled > 0) statusText += ` • ${cancelled} Cancelled`;
+    if (failed > 0) statusText += ` • ${failed} Failed`;
+
+    if (batchSummaryStats) batchSummaryStats.textContent = statusText;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    if (batchSummaryFill) batchSummaryFill.style.width = `${pct}%`;
+  }
+
+  // --- Batch Controls (Pause All, Resume All, Cancel All, Clear Done) ---
+  async function pauseAllTasks() {
+    try {
+      const res = await fetch('/api/tasks/pause-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Paused active downloads`, 'info');
+      }
+    } catch (err) {
+      showToast('Failed to pause all tasks', 'error');
+    }
+  }
+
+  async function resumeAllTasks() {
+    try {
+      const res = await fetch('/api/tasks/resume-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Resumed downloads`, 'info');
+      }
+    } catch (err) {
+      showToast('Failed to resume all tasks', 'error');
+    }
+  }
+
+  async function cancelAllTasks() {
+    const all = Array.from(tasksMap.values());
+    const activeOrQueued = all.filter(t => ['downloading', 'starting', 'paused', 'queued'].includes(t.status));
+    if (activeOrQueued.length === 0) {
+      showToast('No active or queued downloads to cancel', 'info');
+      return;
+    }
+
+    if (!confirm(`Cancel all ${activeOrQueued.length} active/queued download(s)? Any uncompleted download files will be deleted from disk.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/tasks/cancel-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Cancelled ${data.cancelled_count || activeOrQueued.length} download(s) & deleted partial files`, 'warning');
+      }
+    } catch (err) {
+      showToast('Failed to cancel all tasks', 'error');
+    }
+  }
+
+  async function clearCompletedTasks() {
+    try {
+      const res = await fetch('/api/tasks/clear-completed', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        (data.cleared_ids || []).forEach(tid => {
+          tasksMap.delete(tid);
+          const card = document.getElementById(`task-${tid}`);
+          if (card) card.remove();
+        });
+        updateBatchSummary();
+        if (!activeTasksContainer.querySelector('.task-card')) {
+          noTasksEmpty.style.display = 'block';
+        }
+        showToast(`Cleared ${data.cleared_count} finished tasks`, 'info');
+      }
+    } catch (err) {
+      showToast('Failed to clear completed tasks', 'error');
+    }
+  }
+
   // --- Inspect URL ---
   async function inspectUrl() {
     const url = urlInput.value.trim();
     if (!url) {
-      showToast('Please enter or paste a valid YouTube URL', 'error');
+      showToast('Please enter or paste a valid video or media link', 'error');
       urlInput.focus();
       return;
     }
@@ -271,7 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderPreview(data);
       showToast('Video information loaded!', 'success');
     } catch (err) {
-      showToast(err.message || 'Error inspecting URL. Make sure it is a valid YouTube link.', 'error');
+      showToast(err.message || 'Error inspecting URL. Make sure the link is accessible and try again.', 'error');
     } finally {
       btnSpinner.style.display = 'none';
       btnLabel.textContent = 'Analyze';
@@ -284,7 +924,19 @@ document.addEventListener('DOMContentLoaded', () => {
     previewSection.style.display = 'block';
     previewThumb.src = data.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600';
     previewTitle.textContent = data.title || 'Untitled Video';
-    previewChannel.textContent = data.uploader || 'YouTube Creator';
+    previewChannel.textContent = data.uploader || 'Creator / Source';
+
+    // Update Platform Source Badge
+    if (previewPlatformBadge) {
+      const plat = detectPlatform(data.webpage_url || data.url || (urlInput ? urlInput.value : ''));
+      if (plat) {
+        previewPlatformBadge.textContent = `${plat.icon} ${plat.name}`;
+        previewPlatformBadge.className = `source-platform-pill ${plat.pillClass}`;
+      } else {
+        previewPlatformBadge.textContent = '🌐 Online Video';
+        previewPlatformBadge.className = 'source-platform-pill pill-generic';
+      }
+    }
 
     if (data.is_playlist) {
       previewDuration.textContent = `${data.item_count} Videos`;
@@ -304,7 +956,8 @@ document.addEventListener('DOMContentLoaded', () => {
       updateDownloadButtonText();
     } else {
       previewDuration.textContent = data.duration || 'Unknown';
-      previewViews.textContent = data.views ? `${Number(data.views).toLocaleString()} views` : 'YouTube Video';
+      const plat = detectPlatform(data.webpage_url || data.url || (urlInput ? urlInput.value : ''));
+      previewViews.textContent = data.views ? `${Number(data.views).toLocaleString()} views` : (plat ? `${plat.name} Video` : 'Online Video');
       playlistNotice.style.display = 'none';
       playlistSelectionPanel.style.display = 'none';
       selectedPlaylistIndices.clear();
@@ -432,14 +1085,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="checkbox" class="playlist-item-checkbox" ${isSelected ? 'checked' : ''} data-index="${item.index}" />
         <span class="playlist-item-idx">#${item.index}</span>
         <div class="playlist-item-thumb-box">
-          <img class="playlist-item-thumb" src="${item.thumbnail || '/static/img/placeholder.jpg'}" alt="" loading="lazy" />
+          <img class="playlist-item-thumb" src="${item.thumbnail || '/static/img/placeholder.svg'}" alt="" loading="lazy" />
           <span class="playlist-item-duration-tag">${item.duration || '--:--'}</span>
         </div>
         <div class="playlist-item-info">
           <div class="playlist-item-title" title="${escapeQuotes(item.title)}">${escapeHtml(item.title)}</div>
         </div>
         <button type="button" class="playlist-item-quick-dl" title="Download only this video" data-index="${item.index}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -713,32 +1366,37 @@ document.addEventListener('DOMContentLoaded', () => {
     runningTasksCount++;
     updateActiveTasksBadge();
 
+    const isQueued = info.status === 'queued';
     const card = document.createElement('div');
     card.id = `task-${taskId}`;
-    card.className = 'task-card';
+    card.className = `task-card ${isQueued ? 'queued' : ''}`;
     card.innerHTML = `
       <div class="task-top">
-        <img class="task-thumb" src="${info.thumbnail || '/static/img/placeholder.jpg'}" alt="" />
+        <img class="task-thumb" src="${info.thumbnail || '/static/img/placeholder.svg'}" alt="" />
         <div class="task-info">
           <div class="task-title" title="${info.title}">${info.title}</div>
           <div class="task-meta">
             <span class="task-type-badge">${info.audio_only ? '🎵 ' + (info.audio_format || 'MP3').toUpperCase() : '🎥 ' + (info.resolution || 'Best') + 'p'}</span>
-            <span class="task-status-text" id="status-text-${taskId}">Starting download...</span>
+            <span class="task-status-text" id="status-text-${taskId}">${isQueued ? '⏳ Queued in line...' : 'Starting download...'}</span>
           </div>
         </div>
       </div>
       <div class="task-progress-bar-bg">
-        <div class="task-progress-bar-fill" id="progress-fill-${taskId}"></div>
+        <div class="task-progress-bar-fill ${isQueued ? 'paused' : ''}" id="progress-fill-${taskId}"></div>
       </div>
       <div class="task-bottom">
         <div class="task-stats">
-          <div class="task-stat-item">⚡ <span id="speed-${taskId}">--</span></div>
-          <div class="task-stat-item">⏳ <span id="eta-${taskId}">--</span></div>
+          <div class="task-stat-item">⚡ <span id="speed-${taskId}">${isQueued ? '--' : '--'}</span></div>
+          <div class="task-stat-item">⏳ <span id="eta-${taskId}">${isQueued ? 'Waiting' : '--'}</span></div>
         </div>
         <div class="task-actions" id="actions-${taskId}">
           <button class="btn-task-pause" id="pause-btn-${taskId}" data-state="playing" onclick="window.togglePause('${taskId}')" title="Pause download">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
             <span class="btn-pause-text">Pause</span>
+          </button>
+          <button class="btn-task-cancel" id="cancel-btn-${taskId}" onclick="window.cancelDownload('${taskId}')" title="Cancel download & delete partial files">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>Cancel</span>
           </button>
           <span id="percent-${taskId}" style="font-weight: 700; color: #fff; min-width: 36px; text-align: right;">0%</span>
         </div>
@@ -746,6 +1404,8 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     activeTasksContainer.prepend(card);
+    tasksMap.set(taskId, { id: taskId, status: info.status || 'starting', percent: 0, title: info.title });
+    updateBatchSummary();
   }
 
   function listenToTaskProgress(taskId) {
@@ -782,11 +1442,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusEl = document.getElementById(`status-text-${taskId}`);
     const actionsEl = document.getElementById(`actions-${taskId}`);
 
+    tasksMap.set(taskId, task);
+    updateBatchSummary();
+
     const percent = task.percent || 0;
     if (fill) fill.style.width = `${Math.min(percent, 100)}%`;
     if (percentEl) percentEl.textContent = `${percent}%`;
     if (speedEl && task.speed) speedEl.textContent = task.speed;
     if (etaEl && task.eta) etaEl.textContent = task.eta;
+
+    // Dynamically update card title and thumbnail once retrieved by yt-dlp
+    if (task.title && !task.title.startsWith('Queued (ID:') && task.title !== 'Queued...') {
+      const titleEl = card.querySelector('.task-title');
+      if (titleEl && (titleEl.textContent.startsWith('Queued') || titleEl.textContent.includes('Connecting to'))) {
+        titleEl.textContent = task.title;
+        titleEl.title = task.title;
+      }
+    }
+    if (task.thumbnail) {
+      const thumbEl = card.querySelector('.task-thumb');
+      if (thumbEl && (!thumbEl.src || thumbEl.src.includes('placeholder'))) {
+        thumbEl.src = task.thumbnail;
+      }
+    }
+
+    if (task.status === 'queued') {
+      card.classList.add('queued');
+      if (statusEl) {
+        statusEl.textContent = '⏳ Queued in line (waiting for download slot)...';
+        statusEl.style.color = '#f59e0b';
+      }
+      if (speedEl) speedEl.textContent = '--';
+      if (etaEl) etaEl.textContent = 'Waiting';
+      if (percentEl) percentEl.textContent = '0%';
+    } else {
+      card.classList.remove('queued');
+    }
 
     if (task.status === 'downloading' || task.status === 'starting') {
       const itemSuffix = task.current_item ? ` • ${task.current_item}` : '';
@@ -874,13 +1565,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorMsg = task.error || 'Connection interrupted';
         let friendly = 'Download failed';
         if (errorMsg.includes('500') || errorMsg.includes('Internal Server Error')) {
-          friendly = 'YouTube server 500 error — Tap Retry to continue';
+          friendly = 'Server 500 error — Tap Retry to continue';
         } else if (errorMsg.includes('10054') || errorMsg.includes('closed by the remote host')) {
           friendly = 'Connection dropped — Tap Retry to continue';
         } else if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
           friendly = 'Timed out — Tap Retry to continue';
+        } else if (errorMsg.includes('This video is not available')) {
+          friendly = 'Video unavailable or restricted by source site';
         } else {
-          friendly = `Failed: ${errorMsg.slice(0, 42)}`;
+          const clean = errorMsg.replace(/^ERROR:\s*(\[[^\]]+\]\s*)?([a-zA-Z0-9_-]{11}:\s*)?/, '').trim();
+          friendly = `Failed: ${clean.length > 55 ? clean.slice(0, 52) + '...' : clean}`;
         }
         statusEl.textContent = friendly;
         statusEl.style.color = '#ef4444';
@@ -908,6 +1602,36 @@ document.addEventListener('DOMContentLoaded', () => {
       if (evtSource) evtSource.close();
       activeTaskStreams.delete(taskId);
       showToast(`Download failed. Tap "Retry" to continue.`, 'error');
+    } else if (task.status === 'cancelled') {
+      card.classList.add('cancelled');
+      if (fill) {
+        fill.classList.add('error');
+        fill.classList.remove('paused');
+        fill.style.width = '0%';
+      }
+      if (statusEl) {
+        statusEl.textContent = 'Cancelled & deleted from disk ✕';
+        statusEl.style.color = '#ef4444';
+      }
+      if (speedEl) speedEl.textContent = '--';
+      if (etaEl) etaEl.textContent = '--';
+      if (percentEl) {
+        percentEl.textContent = 'Cancelled';
+        percentEl.style.color = '#ef4444';
+      }
+      if (actionsEl) {
+        actionsEl.innerHTML = `
+          <button class="btn-task-dismiss" onclick="window.dismissTaskCard('${taskId}')" title="Dismiss">
+            ✕ Dismiss
+          </button>
+        `;
+      }
+
+      runningTasksCount = Math.max(0, runningTasksCount - 1);
+      updateActiveTasksBadge();
+      if (evtSource) evtSource.close();
+      activeTaskStreams.delete(taskId);
+      showToast(`Cancelled download "${task.title || 'task'}" & removed incomplete file.`, 'info');
     }
   }
 
@@ -923,6 +1647,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const taskList = await tasksRes.json();
       if (Array.isArray(taskList) && taskList.length > 0) {
         taskList.forEach(task => {
+          tasksMap.set(task.id, task);
           if (!document.getElementById(`task-${task.id}`)) {
             createTaskCard(task.id, {
               title: task.title || 'Download',
@@ -930,13 +1655,15 @@ document.addEventListener('DOMContentLoaded', () => {
               audio_only: task.is_audio,
               audio_format: task.quality || 'mp3',
               resolution: task.quality,
+              status: task.status,
             });
             updateTaskProgress(task.id, task, null);
-            if (task.status === 'starting' || task.status === 'downloading' || task.status === 'paused') {
+            if (task.status === 'starting' || task.status === 'downloading' || task.status === 'paused' || task.status === 'queued') {
               listenToTaskProgress(task.id);
             }
           }
         });
+        updateBatchSummary();
       }
 
       // 2. Check pending interrupted downloads from previous sessions
@@ -969,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
     card.className = 'task-card task-card-pending';
     card.innerHTML = `
       <div class="task-top">
-        <img class="task-thumb" src="${item.thumbnail || '/static/img/placeholder.jpg'}" alt="" />
+        <img class="task-thumb" src="${item.thumbnail || '/static/img/placeholder.svg'}" alt="" />
         <div class="task-info">
           <div class="task-title" title="${item.title || 'Unknown'}">${item.title || 'Unknown Video'}</div>
           <div class="task-meta">
@@ -1109,22 +1836,34 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   }
 
-  // Global helper for opening file in explorer
-  window.openFileExplorer = async function(filepath) {
-    if (!filepath) return;
-    try {
-      const res = await fetch('/api/open-file', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filepath })
-      });
-      const data = await res.json();
-      if (!data.success) {
-        // Fallback to opening folder directly
-        openLocalFolder();
+  // Global helper for opening file in explorer and in-app folder drawer
+  window.openFileExplorer = async function(filepath, options = {}) {
+    const shouldOpenDrawer = options.openDrawer !== false;
+    const shouldTriggerOs = options.triggerOs !== false;
+
+    if (shouldOpenDrawer && folderDrawer) {
+      openDrawer(folderDrawer);
+      const filename = filepath ? filepath.split(/[/\\]/).pop() : null;
+      loadFolderFiles(filename);
+    }
+
+    if (shouldTriggerOs && filepath) {
+      try {
+        const res = await fetch('/api/open-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filepath })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Revealed in File Explorer', 'info');
+        } else {
+          // Fallback to opening folder directly
+          fetch('/api/open-folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        }
+      } catch (err) {
+        fetch('/api/open-folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
       }
-    } catch (err) {
-      openLocalFolder();
     }
   };
 
@@ -1262,6 +2001,8 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
+      tasksMap.delete(taskId);
+      updateBatchSummary();
       const card = document.getElementById(`task-${taskId}`);
       if (card) {
         card.style.opacity = '0';
@@ -1279,23 +2020,251 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  async function openLocalFolder(path = null) {
+  // Global: Cancel active download and delete uncompleted file
+  window.cancelDownload = async function(taskId) {
+    const taskInfo = tasksMap.get(taskId);
+    const title = (taskInfo && taskInfo.title) ? taskInfo.title : 'this download';
+
+    if (!confirm(`Cancel "${title}"? Any uncompleted download files will be deleted from disk.`)) {
+      return;
+    }
+
+    const cancelBtn = document.getElementById(`cancel-btn-${taskId}`);
+    if (cancelBtn) {
+      cancelBtn.disabled = true;
+      cancelBtn.innerHTML = `<span>Cancelling...</span>`;
+    }
+
     try {
-      const res = await fetch('/api/open-folder', {
+      const res = await fetch(`/api/task/${taskId}/cancel`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path })
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       if (data.success) {
-        showToast('Opened downloads folder', 'info');
+        showToast('Download cancelled & partial files deleted', 'info');
       } else {
-        showToast('Could not open folder', 'error');
+        showToast(data.error || 'Failed to cancel', 'error');
+        if (cancelBtn) cancelBtn.disabled = false;
       }
     } catch (err) {
-      showToast('Error opening folder', 'error');
+      showToast('Network error while cancelling', 'error');
+      if (cancelBtn) cancelBtn.disabled = false;
+    }
+  };
+
+  let cachedFolderFiles = [];
+
+  window.openLocalFolder = async function(path = null, options = {}) {
+    const shouldOpenDrawer = options.openDrawer !== false;
+    const shouldTriggerOs = options.triggerOs !== false;
+
+    if (shouldOpenDrawer && folderDrawer) {
+      openDrawer(folderDrawer);
+      loadFolderFiles();
+    }
+
+    if (shouldTriggerOs) {
+      try {
+        const res = await fetch('/api/open-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Opened downloads folder in Windows Explorer', 'info');
+        } else {
+          showToast('Could not open folder in Explorer', 'error');
+        }
+      } catch (err) {
+        showToast('Error opening folder', 'error');
+      }
+    }
+  };
+
+  async function loadFolderFiles(highlightTarget = null) {
+    if (!folderFilesList) return;
+    folderFilesList.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <div style="font-size: 1.5rem; margin-bottom: 8px;">📂</div>
+        <div>Loading downloaded files...</div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch('/api/files');
+      const data = await res.json();
+
+      if (folderDrawerPath && data.download_dir) {
+        folderDrawerPath.textContent = data.download_dir;
+        folderDrawerPath.title = data.download_dir;
+      }
+
+      if (folderStatsSummary) {
+        folderStatsSummary.textContent = `${data.total_files || 0} files • ${data.total_size_formatted || '0 B'}`;
+      }
+
+      cachedFolderFiles = data.files || [];
+      renderFolderFiles(cachedFolderFiles, highlightTarget);
+    } catch (err) {
+      folderFilesList.innerHTML = `
+        <div class="folder-empty-state">
+          <h4>Failed to load files</h4>
+          <p>${escapeHtml(err.message)}</p>
+        </div>
+      `;
     }
   }
+
+  function filterFolderFiles(query) {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) {
+      renderFolderFiles(cachedFolderFiles);
+      return;
+    }
+    const filtered = cachedFolderFiles.filter(f => f.name.toLowerCase().includes(q));
+    renderFolderFiles(filtered);
+  }
+
+  function renderFolderFiles(files, highlightTarget = null) {
+    if (!folderFilesList) return;
+
+    if (!files || files.length === 0) {
+      folderFilesList.innerHTML = `
+        <div class="folder-empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <h4>No downloaded files found</h4>
+          <p>Your finished downloads will appear here with instant playback and folder actions.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const hlNorm = highlightTarget ? highlightTarget.toLowerCase().trim() : '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth <= 768);
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    folderFilesList.innerHTML = files.map(f => {
+      const nameLower = f.name.toLowerCase();
+      const isHigh = hlNorm && (nameLower.includes(hlNorm) || hlNorm.includes(nameLower));
+      const iconEmoji = f.type === 'video' ? '🎥' : f.type === 'audio' ? '🎵' : f.type === 'folder' ? '📁' : '📄';
+      const canPlay = f.type === 'video' || f.type === 'audio';
+
+      return `
+        <div class="folder-file-card ${isHigh ? 'highlighted' : ''}">
+          <div class="folder-file-icon ${f.type}">
+            <span>${iconEmoji}</span>
+          </div>
+          <div class="folder-file-info">
+            <div class="folder-file-name" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
+            <div class="folder-file-meta">
+              <span>${f.size_formatted}</span>
+              <span>•</span>
+              <span>${f.modified}</span>
+            </div>
+          </div>
+          <div class="folder-file-actions">
+            ${canPlay ? `
+              <button class="btn-file-action play" onclick="window.playMediaPreview('${f.url}', '${escapeQuotes(f.name)}', '${f.type}')" title="Play media preview in browser">
+                ▶ Play
+              </button>
+            ` : ''}
+            ${!f.is_dir && isMobile ? `
+              <a class="btn-file-action" href="${f.url}?download=1" download="${escapeHtml(f.name)}" title="Save file directly to your phone / mobile device">
+                ⬇ Save to Phone
+              </a>
+            ` : ''}
+            ${!f.is_dir && !isLocalhost && !isMobile ? `
+              <a class="btn-file-action" href="${f.url}?download=1" download="${escapeHtml(f.name)}" title="Download copy to this computer">
+                ⬇ Save
+              </a>
+            ` : ''}
+            ${isLocalhost ? `
+              <button class="btn-file-action" onclick="window.openFileExplorer('${escapeQuotes(f.fullpath || f.name)}', { openDrawer: false, triggerOs: true })" title="Locate & highlight this file in Windows File Explorer">
+                📂 Locate File
+              </button>
+            ` : ''}
+            <button class="btn-file-action danger" onclick="window.deleteDownloadedFile('${escapeQuotes(f.relpath)}', '${escapeQuotes(f.name)}')" title="Delete from disk">
+              ✕
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (highlightTarget) {
+      setTimeout(() => {
+        const el = folderFilesList.querySelector('.highlighted');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }
+
+  window.playMediaPreview = function(url, title, type) {
+    if (!mediaPreviewModal) return;
+    if (mediaPreviewTitle) mediaPreviewTitle.textContent = title || 'Media Preview';
+
+    if (type === 'video') {
+      if (previewAudioPlayer) {
+        previewAudioPlayer.pause();
+        previewAudioPlayer.style.display = 'none';
+      }
+      if (previewVideoPlayer) {
+        previewVideoPlayer.src = url;
+        previewVideoPlayer.style.display = 'block';
+        previewVideoPlayer.play().catch(() => {});
+      }
+    } else {
+      if (previewVideoPlayer) {
+        previewVideoPlayer.pause();
+        previewVideoPlayer.style.display = 'none';
+      }
+      if (previewAudioPlayer) {
+        previewAudioPlayer.src = url;
+        previewAudioPlayer.style.display = 'block';
+        previewAudioPlayer.play().catch(() => {});
+      }
+    }
+
+    openModal(mediaPreviewModal);
+  };
+
+  function closeMediaPreview() {
+    if (previewVideoPlayer) {
+      previewVideoPlayer.pause();
+      previewVideoPlayer.src = '';
+    }
+    if (previewAudioPlayer) {
+      previewAudioPlayer.pause();
+      previewAudioPlayer.src = '';
+    }
+    if (mediaPreviewModal) closeModal(mediaPreviewModal);
+  }
+
+  window.deleteDownloadedFile = async function(relpath, name) {
+    if (!confirm(`Are you sure you want to delete "${name}" from disk?`)) return;
+    try {
+      const res = await fetch('/api/files/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relpath })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Deleted "${name}"`, 'info');
+        loadFolderFiles();
+      } else {
+        showToast(data.error || 'Failed to delete file', 'error');
+      }
+    } catch (err) {
+      showToast('Error deleting file', 'error');
+    }
+  };
 
   // --- Drawer & Modal Helpers ---
   function openDrawer(drawer) {

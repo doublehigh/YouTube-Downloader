@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rhamify Studio &mdash; Ultra Fast &amp; Modern YouTube Downloader</title>
-  <meta name="description" content="Download YouTube videos, shorts, audio, and playlists in ultra-high quality with modern real-time progress and sleek aesthetics.">
+  <title>Rhamify Studio &mdash; Universal Video &amp; Audio Downloader (Any Link)</title>
+  <meta name="description" content="Download video and audio from YouTube, TikTok, Instagram, Facebook, X (Twitter), Reddit, Vimeo &amp; 1,000+ websites in ultra-high quality with modern real-time progress.">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,7 @@
         </div>
         <div class="brand-text">
           <span class="brand-title">Rhamify Studio</span>
-          <span class="brand-badge">PRO</span>
+          <span class="brand-badge universal-badge-pill" title="Universal Video &amp; Audio Downloader — Works with Any Link">ANY LINK</span>
         </div>
       </div>
 
@@ -73,17 +73,86 @@
     <main class="main-content">
       <!-- Hero Headline -->
       <section class="hero-section">
+        <!-- Universal Feature Pill -->
+        <div class="universal-hero-badge" id="btn-open-supported-sites" title="Click to view all 1,000+ supported platforms">
+          <span class="badge-dot-glow"></span>
+          <span class="badge-pill-icon">🌐</span>
+          <span class="badge-pill-text">Universal Downloader &bull; <strong>1,000+ Sites Supported</strong></span>
+          <span class="badge-pill-arrow">&rarr;</span>
+        </div>
+
         <h1 class="hero-title">
-          Download <span class="gradient-text">Anything</span> from YouTube
+          Download <span class="gradient-text">Any Video</span> from Any Link
         </h1>
         <p class="hero-subtitle">
-          Blazing fast 4K video, crystal clear MP3 audio, Shorts & Playlists in seconds.
+          Paste any link from YouTube, TikTok, Instagram, Facebook, X (Twitter), Reddit, Vimeo &amp; 1,000+ websites. Ultra-fast 4K video, MP3 audio, and playlists.
         </p>
 
-        <!-- Search / URL Input Box -->
-        <div class="input-card">
+        <!-- Interactive Supported Platforms Bar -->
+        <div class="platforms-bar-container">
+          <div class="platforms-bar">
+            <span class="platforms-label">Supported:</span>
+            <div class="platform-tag tag-yt" title="YouTube (Videos, Shorts, Playlists)">
+              <span class="tag-icon">▶️</span>
+              <span class="tag-name">YouTube</span>
+            </div>
+            <div class="platform-tag tag-tt" title="TikTok (HD &amp; Audio, No Watermark)">
+              <span class="tag-icon">🎵</span>
+              <span class="tag-name">TikTok</span>
+            </div>
+            <div class="platform-tag tag-ig" title="Instagram (Reels, Posts, Stories)">
+              <span class="tag-icon">📸</span>
+              <span class="tag-name">Instagram</span>
+            </div>
+            <div class="platform-tag tag-fb" title="Facebook (Videos &amp; Reels)">
+              <span class="tag-icon">🔷</span>
+              <span class="tag-name">Facebook</span>
+            </div>
+            <div class="platform-tag tag-x" title="X / Twitter (Videos &amp; Media)">
+              <span class="tag-icon">🐦</span>
+              <span class="tag-name">X (Twitter)</span>
+            </div>
+            <div class="platform-tag tag-rd" title="Reddit (Videos with Audio)">
+              <span class="tag-icon">🤖</span>
+              <span class="tag-name">Reddit</span>
+            </div>
+            <div class="platform-tag tag-vm" title="Vimeo (HD Videos)">
+              <span class="tag-icon">🎬</span>
+              <span class="tag-name">Vimeo</span>
+            </div>
+            <div class="platform-tag tag-tw" title="Twitch (Clips &amp; VODs)">
+              <span class="tag-icon">👾</span>
+              <span class="tag-name">Twitch</span>
+            </div>
+            <button type="button" id="btn-more-platforms" class="platform-tag tag-more" title="Click to view all 1,000+ supported sites">
+              <span class="tag-icon">✨</span>
+              <span class="tag-name">+1,000 More Sites</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode Switcher Tabs: Single vs Batch -->
+        <div class="input-mode-switcher">
+          <button type="button" id="tab-mode-single" class="mode-tab active">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>Single Link</span>
+          </button>
+          <button type="button" id="tab-mode-batch" class="mode-tab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>⚡ Batch / Multi-Link</span>
+            <span class="mode-tab-badge">MULTI</span>
+          </button>
+        </div>
+
+        <!-- Single URL Input Card -->
+        <div id="single-input-container" class="input-card">
           <div class="input-wrapper">
-            <span class="input-icon">
+            <span class="input-icon" id="input-source-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
@@ -92,10 +161,11 @@
             <input 
               type="text" 
               id="url-input" 
-              placeholder="Paste YouTube video, shorts, or playlist URL here..." 
+              placeholder="Paste any video link (YouTube, TikTok, Instagram, X, Facebook, Reddit, or any link)..." 
               autocomplete="off"
               spellcheck="false"
             />
+            <span id="input-detected-platform" class="input-detected-pill" style="display: none;"></span>
             <button id="btn-paste" class="btn-input-action" title="Paste from clipboard">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -113,6 +183,115 @@
             </svg>
           </button>
         </div>
+
+        <!-- Batch / Multi-Link Input Card -->
+        <div id="batch-input-container" class="batch-card" style="display: none;">
+          <!-- Batch Header / Quick Action Toolbar -->
+          <div class="batch-toolbar">
+            <div class="batch-toolbar-left">
+              <span class="batch-icon">⚡</span>
+              <span class="batch-title">Multi-Link Universal Downloader</span>
+              <span id="batch-links-badge" class="batch-count-badge">0 Links Found</span>
+            </div>
+            <div class="batch-toolbar-actions">
+              <button type="button" id="btn-batch-paste" class="btn-batch-tool" title="Paste URLs from clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span>Paste All</span>
+              </button>
+              <button type="button" id="btn-batch-import" class="btn-batch-tool" title="Import URLs from a text file">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Import .txt</span>
+              </button>
+              <input type="file" id="batch-file-input" accept=".txt" style="display: none;" />
+              <button type="button" id="btn-batch-clear" class="btn-batch-tool btn-batch-tool-danger" title="Clear all URLs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Multi-line Textarea -->
+          <div class="batch-textarea-wrapper">
+            <textarea 
+              id="batch-urls-input" 
+              class="batch-textarea"
+              placeholder="Paste any video links here — one URL per line, comma or space separated...&#10;https://www.youtube.com/watch?v=...&#10;https://www.tiktok.com/@user/video/...&#10;https://www.instagram.com/reel/...&#10;https://x.com/user/status/...&#10;Works with 1,000+ sites or any direct video link!"
+              rows="5"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <!-- Batch Format & Quality Options Panel -->
+          <div class="batch-options-card">
+            <div class="batch-options-row">
+              <!-- Format Switch -->
+              <div class="batch-format-switch">
+                <button type="button" id="batch-tab-video" class="batch-opt-tab active" data-mode="video">
+                  🎥 Video (MP4)
+                </button>
+                <button type="button" id="batch-tab-audio" class="batch-opt-tab" data-mode="audio">
+                  🎵 Audio (MP3)
+                </button>
+              </div>
+
+              <!-- Video Resolution Selector -->
+              <div id="batch-video-res-group" class="batch-selector-group">
+                <label class="batch-label">Quality:</label>
+                <select id="batch-resolution-select" class="batch-select">
+                  <option value="auto" selected>⚡ Auto (Best Quality)</option>
+                  <option value="2160">2160p (4K Ultra HD)</option>
+                  <option value="1440">1440p (2K Quad HD)</option>
+                  <option value="1080">1080p (Full HD)</option>
+                  <option value="720">720p (HD)</option>
+                  <option value="480">480p (Standard)</option>
+                  <option value="360">360p (Data Saver)</option>
+                </select>
+              </div>
+
+              <!-- Audio Codec Selector -->
+              <div id="batch-audio-format-group" class="batch-selector-group" style="display: none;">
+                <label class="batch-label">Audio Codec:</label>
+                <select id="batch-audio-select" class="batch-select">
+                  <option value="mp3" selected>MP3 (Universal 192k)</option>
+                  <option value="m4a">M4A (Apple / AAC)</option>
+                  <option value="wav">WAV (Lossless)</option>
+                  <option value="opus">OPUS (Modern)</option>
+                </select>
+              </div>
+
+              <!-- Concurrency Selector -->
+              <div class="batch-selector-group">
+                <label class="batch-label">Simultaneous:</label>
+                <select id="batch-concurrency-select" class="batch-select" title="How many links download at the same time">
+                  <option value="2">2 at once</option>
+                  <option value="3" selected>3 at once (Fast)</option>
+                  <option value="5">5 at once (Turbo)</option>
+                  <option value="8">8 at once (Max)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Download Button -->
+            <div class="batch-action-row">
+              <button type="button" id="btn-batch-download" class="btn-batch-download" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span id="batch-dl-btn-text">Paste links above to start</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Video Inspection / Preview Card (Dynamic) -->
@@ -128,7 +307,10 @@
 
           <div class="preview-details">
             <div class="preview-header">
-              <h2 id="preview-title" class="video-title">Video Title</h2>
+              <div class="preview-title-row">
+                <span id="preview-platform-badge" class="source-platform-pill">YouTube</span>
+                <h2 id="preview-title" class="video-title">Video Title</h2>
+              </div>
               <div class="video-meta">
                 <span id="preview-channel" class="channel-name">Channel</span>
                 <span class="meta-dot">•</span>
@@ -195,7 +377,7 @@
               <div id="playlist-selection-panel" class="playlist-selection-panel" style="display: none;">
                 <div class="playlist-selection-header">
                   <div class="playlist-selection-stats">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="9 11 12 14 22 4"></polyline>
                       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                     </svg>
@@ -210,7 +392,7 @@
 
                 <!-- Fast Filter Input -->
                 <div class="playlist-filter-bar">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
@@ -246,6 +428,38 @@
             <span class="pulse-dot"></span> Active Tasks
           </h3>
           <span id="active-tasks-count" class="tasks-counter">0 running</span>
+        </div>
+
+        <!-- Batch Summary Banner (Appears when tasks are active) -->
+        <div id="batch-summary-bar" class="batch-summary-bar" style="display: none;">
+          <div class="batch-summary-header">
+            <div class="batch-summary-info">
+              <span class="batch-summary-icon">⚡</span>
+              <span class="batch-summary-title">Batch Progress</span>
+              <span id="batch-summary-stats" class="batch-summary-stats">0 of 0 Completed</span>
+            </div>
+            <div class="batch-summary-actions">
+              <button type="button" id="btn-batch-pause-all" class="btn-summary-action" title="Pause all downloading tasks">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <span>Pause All</span>
+              </button>
+              <button type="button" id="btn-batch-resume-all" class="btn-summary-action" title="Resume all paused tasks">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Resume All</span>
+              </button>
+              <button type="button" id="btn-batch-cancel-all" class="btn-summary-action danger" title="Cancel all active downloads and delete incomplete files">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                <span>Cancel All</span>
+              </button>
+              <button type="button" id="btn-batch-clear-done" class="btn-summary-action btn-summary-clear" title="Clear completed and failed tasks">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>Clear Done</span>
+              </button>
+            </div>
+          </div>
+          <div class="batch-summary-track">
+            <div id="batch-summary-fill" class="batch-summary-fill" style="width: 0%;"></div>
+          </div>
         </div>
 
         <div id="active-tasks-container" class="tasks-list">
@@ -285,6 +499,179 @@
       </div>
     </div>
 
+    <!-- Slide-over Downloads / Folder Drawer -->
+    <div id="folder-drawer" class="drawer">
+      <div class="drawer-overlay"></div>
+      <div class="drawer-content folder-drawer-content">
+        <div class="drawer-header">
+          <div class="drawer-title-group">
+            <div class="drawer-header-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Downloads Folder</h3>
+              <div id="folder-drawer-path" class="drawer-subpath" title="Current download location">Loading...</div>
+            </div>
+          </div>
+          <div class="drawer-header-actions">
+            <button id="btn-reveal-os-explorer" class="btn-folder-os" title="Open Downloads folder on your computer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <span id="btn-reveal-os-explorer-text">Open Folder</span>
+            </button>
+            <button id="btn-refresh-folder" class="btn-icon" title="Refresh file list">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+            <button id="btn-close-folder" class="btn-icon">✕</button>
+          </div>
+        </div>
+
+        <!-- Filter / Stats Bar -->
+        <div class="folder-drawer-toolbar">
+          <div class="folder-search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="folder-search-input" placeholder="Search downloaded files..." />
+          </div>
+          <div class="folder-stats" id="folder-stats-summary">
+            0 files • 0 MB
+          </div>
+        </div>
+
+        <div id="folder-files-list" class="drawer-list folder-files-list">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Preview Player Modal -->
+    <div id="media-preview-modal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-card media-modal-card">
+        <div class="modal-header">
+          <h3 id="media-preview-title">Media Preview</h3>
+          <button id="btn-close-media" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body media-modal-body">
+          <video id="preview-video-player" controls autoplay style="width: 100%; border-radius: 8px; display: none;"></video>
+          <audio id="preview-audio-player" controls autoplay style="width: 100%; display: none;"></audio>
+        </div>
+      </div>
+    <!-- Supported Sites Modal -->
+    <div id="supported-sites-modal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-card supported-sites-modal-card">
+        <div class="modal-header">
+          <div class="modal-header-icon-title">
+            <span class="modal-header-emoji">🌐</span>
+            <div>
+              <h3>Universal Downloader Supported Platforms</h3>
+              <p class="modal-subtitle">Download high quality video &amp; audio from 1,000+ websites</p>
+            </div>
+          </div>
+          <button id="btn-close-supported-sites" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body supported-sites-body">
+          <div class="sites-search-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="sites-search-input" placeholder="Search supported platforms (e.g. TikTok, Instagram, Vimeo)..." />
+          </div>
+
+          <div class="sites-categories" id="sites-categories-list">
+            <!-- Social & Viral Video -->
+            <div class="site-category-card">
+              <div class="category-header">
+                <span class="cat-icon">🔥</span>
+                <h4>Social &amp; Short Form</h4>
+              </div>
+              <div class="site-chips">
+                <span class="site-chip highlight">YouTube &amp; Shorts</span>
+                <span class="site-chip highlight">TikTok (No Watermark)</span>
+                <span class="site-chip highlight">Instagram Reels &amp; Stories</span>
+                <span class="site-chip highlight">Facebook Watch &amp; Reels</span>
+                <span class="site-chip highlight">X / Twitter</span>
+                <span class="site-chip highlight">Reddit Videos</span>
+                <span class="site-chip">Threads</span>
+                <span class="site-chip">Pinterest Video</span>
+                <span class="site-chip">Snapchat Spotlight</span>
+                <span class="site-chip">Tumblr</span>
+              </div>
+            </div>
+
+            <!-- Streaming & Video Portals -->
+            <div class="site-category-card">
+              <div class="category-header">
+                <span class="cat-icon">🎬</span>
+                <h4>Video Streaming &amp; Communities</h4>
+              </div>
+              <div class="site-chips">
+                <span class="site-chip highlight">Vimeo HD</span>
+                <span class="site-chip highlight">Twitch Clips &amp; VODs</span>
+                <span class="site-chip">Dailymotion</span>
+                <span class="site-chip">Bilibili</span>
+                <span class="site-chip">Rumble</span>
+                <span class="site-chip">Odysee</span>
+                <span class="site-chip">VK Video</span>
+                <span class="site-chip">PeerTube</span>
+                <span class="site-chip">Streamable</span>
+              </div>
+            </div>
+
+            <!-- Music & Audio -->
+            <div class="site-category-card">
+              <div class="category-header">
+                <span class="cat-icon">🎵</span>
+                <h4>Music &amp; Audio</h4>
+              </div>
+              <div class="site-chips">
+                <span class="site-chip highlight">YouTube Music</span>
+                <span class="site-chip highlight">SoundCloud</span>
+                <span class="site-chip">Bandcamp</span>
+                <span class="site-chip">Mixcloud</span>
+                <span class="site-chip">Audiomack</span>
+                <span class="site-chip">Freesound</span>
+              </div>
+            </div>
+
+            <!-- Media, News & Direct Streams -->
+            <div class="site-category-card">
+              <div class="category-header">
+                <span class="cat-icon">📡</span>
+                <h4>News, Media &amp; Direct Streams</h4>
+              </div>
+              <div class="site-chips">
+                <span class="site-chip">TED Talks</span>
+                <span class="site-chip">BBC / CNN / Reuters</span>
+                <span class="site-chip">Direct MP4 / WebM URLs</span>
+                <span class="site-chip">HLS (.m3u8) Streams</span>
+                <span class="site-chip">DASH (.mpd) Streams</span>
+                <span class="site-chip highlight">+ 1,000 More via yt-dlp Core</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sites-footer-hint">
+            <span class="hint-icon">💡</span>
+            <span><strong>Pro Tip:</strong> Simply copy any public link from your browser or mobile share menu and paste it directly into the input bar. Rhamify Studio will automatically detect the site and extract the best available quality!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal">
       <div class="modal-overlay"></div>
@@ -318,9 +705,32 @@
           </div>
 
           <div class="form-group">
+            <label>Max Simultaneous Downloads (Concurrency):</label>
+            <select id="setting-max-concurrent" class="custom-select">
+              <option value="1">1 at a time (Sequential)</option>
+              <option value="2">2 simultaneous</option>
+              <option value="3" selected>3 simultaneous (Recommended)</option>
+              <option value="5">5 simultaneous (High-Speed)</option>
+              <option value="8">8 simultaneous (Maximum)</option>
+            </select>
+            <p class="form-hint">Limits how many downloads run at the exact same moment. Additional links automatically wait in queue.</p>
+          </div>
+
+          <div class="form-group">
             <label>FFmpeg Status & Troubleshooting:</label>
             <div id="settings-ffmpeg-info" class="ffmpeg-info-box">
               Checking status...
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>📱 Mobile & Local Network Access:</label>
+            <div id="settings-mobile-access" class="mobile-access-box">
+              <div class="mobile-access-row">
+                <span class="mobile-access-url" id="mobile-access-url">Loading...</span>
+                <button type="button" id="btn-copy-mobile-url" class="btn-copy-mobile" title="Copy Mobile URL">Copy</button>
+              </div>
+              <p class="form-hint">Connect your phone or tablet on the same Wi-Fi network using this URL to download directly to your mobile device.</p>
             </div>
           </div>
         </div>

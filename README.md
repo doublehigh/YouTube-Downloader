@@ -1,12 +1,19 @@
-# ⚡ YouTube Downloader Studio
+# ⚡ Rhamify Studio — Universal Video & Media Downloader (Any Link)
 
-A fast, modern YouTube video and audio downloader powered by **Flask** and **yt-dlp**, featuring a glassmorphic dark-mode UI with live real-time progress indicators, video preview, quality selectors, and download history.
+A lightning-fast, ultra-modern universal video and audio downloader powered by **Flask** and **yt-dlp**, featuring a glassmorphic dark-mode UI with live real-time progress indicators, multi-platform URL detection, video preview, quality selectors, batch downloading, and download history.
+
+**Works with any link:** YouTube, TikTok, Instagram, Facebook, X (Twitter), Reddit, Vimeo, Twitch, and 1,000+ supported sites!
 
 ---
 
 ## ✨ Features
 
-- **Ultra-Modern Glassmorphic UI**: Deep obsidian theme with crimson YouTube glowing accents, responsive layout, and micro-animations.
+- **🌐 Universal Any-Link Downloader**: Works with YouTube, TikTok (watermark-free), Instagram (Reels & Stories), Facebook, X / Twitter, Reddit, Vimeo, Twitch, SoundCloud, and 1,000+ websites.
+- **Ultra-Modern Glassmorphic UI**: Deep obsidian theme with vibrant glowing platform badges, responsive layout, interactive supported platforms bar, and micro-animations.
+- **⚡ Batch / Multi-Link Downloading**:
+  - Paste dozens of links from any platform at once, import from `.txt`, or auto-detect multiple links from clipboard.
+  - Smart concurrency queue (default 3 simultaneous downloads, configurable in settings) to prevent bandwidth starvation or rate-limiting.
+  - Real-time batch progress summary bar (`X of Y Completed • Z Active • W Queued`) with `Pause All`, `Resume All`, and `Clear Done`.
 - **Instant Video Inspection**: Live thumbnail preview, duration badge, video channel, view count, and available resolution options (4K, 1440p, 1080p, 720p, 480p, 360p).
 - **Video & Audio Modes**:
   - 🎥 **Video**: Download MP4/WebM in up to 4K resolution.
@@ -19,7 +26,7 @@ A fast, modern YouTube video and audio downloader powered by **Flask** and **yt-
 - **Multiple Launch Modes**:
   - Web UI: Auto-launches in your default web browser (`http://127.0.0.1:5000`).
   - Desktop Window: Optional frameless native desktop window via `pywebview`.
-  - Classic CLI: Full command-line interface retained for scripts and automation.
+  - Classic CLI: Full command-line interface retained for scripts and automation with parallel download support (`-j`).
 
 ---
 
@@ -47,6 +54,12 @@ You can still use the CLI at any time:
 ```bash
 # Download a video
 python yt_downloader.py "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Download multiple links in parallel (3 concurrent downloads)
+python yt_downloader.py URL1 URL2 URL3 -j 3
+
+# Download multiple links from a text file
+python yt_downloader.py --from-file urls.txt -j 4
 
 # Download audio only as MP3
 python yt_downloader.py URL --audio-only --audio-format mp3

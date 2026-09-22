@@ -55,6 +55,11 @@ def build_ydl_opts(args):
         "noplaylist": not args.playlist,
         "quiet": False,
         "no_warnings": False,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"]
+            }
+        },
     }
 
     ffmpeg_exe = get_ffmpeg_path()
@@ -96,18 +101,43 @@ def read_urls_from_file(path):
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 
-def download(urls, args):
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def _download_worker(url, args):
     ydl_opts = build_ydl_opts(args)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            print(f"\n[+] Starting download: {url}")
+            ydl.download([url])
+            return url, None
+    except Exception as e:
+        return url, str(e)
+
+
+def download(urls, args):
     failures = []
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        for url in urls:
-            print(f"\nDownloading: {url}")
-            try:
-                ydl.download([url])
-            except yt_dlp.utils.DownloadError as e:
-                print(f"  Failed: {e}")
-                failures.append(url)
+    if len(urls) > 1 and getattr(args, "concurrency", 1) > 1:
+        print(f"\n⚡ Downloading {len(urls)} links at once with {args.concurrency} concurrent workers...")
+        with ThreadPoolExecutor(max_workers=args.concurrency) as executor:
+            futures = {executor.submit(_download_worker, u, args): u for u in urls}
+            for fut in as_completed(futures):
+                u, err = fut.result()
+                if err:
+                    print(f"\n  ❌ Failed: {u}\n     Error: {err}")
+                    failures.append(u)
+                else:
+                    print(f"\n  ✓ Finished: {u}")
+    else:
+        ydl_opts = build_ydl_opts(args)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            for url in urls:
+                print(f"\nDownloading: {url}")
+                try:
+                    ydl.download([url])
+                except yt_dlp.utils.DownloadError as e:
+                    print(f"  Failed: {e}")
+                    failures.append(url)
 
     if failures:
         print(f"\n{len(failures)} download(s) failed:")
@@ -128,6 +158,10 @@ def parse_args():
     parser.add_argument(
         "--from-file", metavar="FILE",
         help="Read URLs from a text file (one URL per line, '#' for comments)"
+    )
+    parser.add_argument(
+        "-j", "--concurrent", "--concurrency", dest="concurrency", type=int, default=3,
+        help="Max simultaneous downloads when multiple URLs are passed (default: 3)"
     )
     parser.add_argument(
         "-o", "--output", default="downloads",
