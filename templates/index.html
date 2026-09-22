@@ -59,6 +59,14 @@
           <span id="history-badge-count" class="badge-count">0</span>
         </button>
 
+        <!-- 1-Click Tools Button -->
+        <button id="btn-toggle-tools" class="btn-ghost btn-tools-trigger" title="1-Click Download Tools (Bookmarklet &amp; Extension)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span class="btn-text">1-Click Tools</span>
+        </button>
+
         <!-- Settings Button -->
         <button id="btn-toggle-settings" class="btn-icon" title="Preferences">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,6 +79,22 @@
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Clipboard Auto-Detected Banner -->
+      <div id="clipboard-banner" class="clipboard-banner" style="display: none;">
+        <div class="clipboard-banner-left">
+          <span class="clipboard-banner-icon" id="clipboard-platform-icon">📋</span>
+          <div class="clipboard-banner-info">
+            <span class="clipboard-banner-title">Copied video link detected</span>
+            <span class="clipboard-banner-url" id="clipboard-detected-url">https://...</span>
+          </div>
+        </div>
+        <div class="clipboard-banner-actions">
+          <button type="button" id="btn-clipboard-download" class="btn-clipboard-action btn-clipboard-dl">⚡ Download Now</button>
+          <button type="button" id="btn-clipboard-inspect" class="btn-clipboard-action">Analyze</button>
+          <button type="button" id="btn-clipboard-dismiss" class="btn-clipboard-close" title="Dismiss">✕</button>
+        </div>
+      </div>
+
       <!-- Hero Headline -->
       <section class="hero-section">
         <!-- Universal Feature Pill -->
@@ -724,6 +748,15 @@
           </div>
 
           <div class="form-group">
+            <label>📋 Clipboard Auto-Watcher:</label>
+            <div class="checkbox-container">
+              <input type="checkbox" id="setting-auto-clipboard" checked />
+              <span>Prompt to download when returning to app with a video link copied</span>
+            </div>
+            <p class="form-hint">Eliminates manual pasting: automatically senses video links copied on your computer or phone.</p>
+          </div>
+
+          <div class="form-group">
             <label>📱 Mobile & Local Network Access:</label>
             <div id="settings-mobile-access" class="mobile-access-box">
               <div class="mobile-access-row">
@@ -731,6 +764,121 @@
                 <button type="button" id="btn-copy-mobile-url" class="btn-copy-mobile" title="Copy Mobile URL">Copy</button>
               </div>
               <p class="form-hint">Connect your phone or tablet on the same Wi-Fi network using this URL to download directly to your mobile device.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1-Click Tools Modal (Bookmarklet, Extension & Clipboard) -->
+    <div id="tools-modal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-card tools-modal-card">
+        <div class="modal-header">
+          <div class="modal-header-icon-title">
+            <span class="modal-header-emoji">⚡</span>
+            <div>
+              <h3>1-Click Download Tools</h3>
+              <p class="modal-subtitle">Download directly from any video page &mdash; no manual copy &amp; paste</p>
+            </div>
+          </div>
+          <button id="btn-close-tools" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body tools-modal-body">
+          <!-- Tools Tabs -->
+          <div class="tools-tab-switcher">
+            <button type="button" class="tools-tab active" data-tab="bookmarklet">
+              <span>🌟 1-Click Bookmarklet</span>
+              <span class="tab-sub">Zero Install</span>
+            </button>
+            <button type="button" class="tools-tab" data-tab="extension">
+              <span>🧩 Browser Extension</span>
+              <span class="tab-sub">In-Page Button</span>
+            </button>
+            <button type="button" class="tools-tab" data-tab="clipboard">
+              <span>📋 Clipboard Watcher</span>
+              <span class="tab-sub">Instant Detection</span>
+            </button>
+          </div>
+
+          <!-- Tab Content: Bookmarklet -->
+          <div id="tool-pane-bookmarklet" class="tool-pane active">
+            <div class="tool-hero-box">
+              <div class="tool-hero-tag">Zero Install • Works on Chrome, Edge, Brave, Firefox, Safari &amp; Mobile</div>
+              <h4>Drag this button to your Bookmarks Bar:</h4>
+              <div class="bookmarklet-drag-zone">
+                <a id="bookmarklet-link" href="#" class="btn-bookmarklet" title="Drag me to your Bookmarks Bar!">
+                  ⚡ Download with Rhamify
+                </a>
+              </div>
+              <p class="tool-drag-hint">👆 Click and drag the button above to your browser's bookmarks bar (press <kbd>Ctrl+Shift+B</kbd> on Windows or <kbd>Cmd+Shift+B</kbd> on Mac if your bar is hidden).</p>
+            </div>
+
+            <div class="tool-steps">
+              <h5>How to use it:</h5>
+              <ol class="steps-list">
+                <li><span class="step-num">1</span> While watching any video on YouTube, TikTok, Instagram, Twitter/X, Facebook, etc.</li>
+                <li><span class="step-num">2</span> Simply click your <strong>"⚡ Download with Rhamify"</strong> bookmark button.</li>
+                <li><span class="step-num">3</span> Rhamify Studio opens automatically and starts analyzing/downloading immediately!</li>
+              </ol>
+            </div>
+
+            <div class="tool-copy-row">
+              <span class="tool-copy-hint">Using mobile or unable to drag?</span>
+              <button type="button" id="btn-copy-bookmarklet" class="btn-secondary btn-sm">Copy Bookmarklet Code</button>
+            </div>
+          </div>
+
+          <!-- Tab Content: Browser Extension -->
+          <div id="tool-pane-extension" class="tool-pane" style="display: none;">
+            <div class="tool-hero-box">
+              <div class="tool-hero-tag">Manifest V3 Extension for Chrome, Edge &amp; Brave</div>
+              <h4>In-Page Download Buttons &amp; Right-Click Menu</h4>
+              <p class="tool-desc">Adds a sleek <strong>"⚡ Rhamify"</strong> download button directly next to YouTube / TikTok video player actions, and a right-click <em>"Download with Rhamify"</em> option on any link.</p>
+            </div>
+
+            <div class="tool-steps">
+              <h5>Quick 30-Second Setup:</h5>
+              <ol class="steps-list">
+                <li><span class="step-num">1</span> Open Chrome or Edge and navigate to <code class="code-pill">chrome://extensions</code> (or <code class="code-pill">edge://extensions</code>).</li>
+                <li><span class="step-num">2</span> Toggle ON <strong>"Developer mode"</strong> in the top-right corner.</li>
+                <li><span class="step-num">3</span> Click <strong>"Load unpacked"</strong> and select the <code class="code-pill">extension</code> folder in this project.</li>
+                <li><span class="step-num">4</span> The extension automatically links with this server, and you can change the server domain in the extension popup whenever the site is live!</li>
+              </ol>
+            </div>
+
+            <div class="extension-config-preview">
+              <div class="ext-cfg-label">Current Server URL (Auto-Configured):</div>
+              <code id="ext-server-endpoint" class="ext-cfg-url">Loading...</code>
+            </div>
+          </div>
+
+          <!-- Tab Content: Clipboard Watcher -->
+          <div id="tool-pane-clipboard" class="tool-pane" style="display: none;">
+            <div class="tool-hero-box">
+              <div class="tool-hero-tag">Zero Effort • Built-in Feature</div>
+              <h4>Automatic Copied Link Detection</h4>
+              <p class="tool-desc">Whenever you copy a video link from anywhere (browser, Discord, WhatsApp, Telegram, etc.) and switch to Rhamify Studio, a 1-tap download prompt appears automatically.</p>
+            </div>
+
+            <div class="clipboard-setting-card">
+              <div class="clipboard-setting-info">
+                <strong>Auto-detect copied video links</strong>
+                <p>Prompt to download as soon as you switch back to this tab with a video link copied.</p>
+              </div>
+              <label class="switch-custom">
+                <input type="checkbox" id="chk-auto-clipboard-tool" checked>
+                <span class="slider-custom round"></span>
+              </label>
+            </div>
+
+            <div class="tool-steps">
+              <h5>How it works:</h5>
+              <ol class="steps-list">
+                <li><span class="step-num">1</span> Copy any video link (right-click &rarr; "Copy link address" or tap Share &rarr; Copy Link).</li>
+                <li><span class="step-num">2</span> Return to the Rhamify Studio tab.</li>
+                <li><span class="step-num">3</span> A floating banner appears instantly at the top with a <strong>"⚡ Download Now"</strong> button!</li>
+              </ol>
             </div>
           </div>
         </div>

@@ -18,6 +18,10 @@ A lightning-fast, ultra-modern universal video and audio downloader powered by *
 - **Video & Audio Modes**:
   - 🎥 **Video**: Download MP4/WebM in up to 4K resolution.
   - 🎵 **Audio Only**: Extract to MP3, M4A, WAV, or OPUS.
+- **⚡ 1-Click Download Tools (No Copy & Paste)**:
+  - **🌟 1-Click Bookmarklet**: Drag the button from the app to your bookmarks bar. Works dynamically with any live server URL. Click while watching any video on YouTube, TikTok, X, etc., to download immediately.
+  - **🧩 Chrome / Edge Extension (Manifest V3)**: Injects an in-page download button directly into YouTube video actions, adds right-click context menu, and supports custom live server endpoints.
+  - **📋 Auto-Clipboard Watcher**: Senses video links copied on your computer or mobile device and prompts with a 1-tap download banner.
 - **Real-Time Progress Tracking**: Server-Sent Events (SSE) provide smooth, live updates on percent completion, download speed (MB/s), ETA, and transferred bytes.
 - **One-Click Actions**:
   - 📂 **Reveal in Folder**: Highlights downloaded files directly in Windows File Explorer.

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rhamify Studio</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="brand">
+        <span class="brand-icon">⚡</span>
+        <div>
+          <h1 class="brand-title">Rhamify Studio</h1>
+          <span class="brand-sub">Universal Downloader</span>
+        </div>
+      </div>
+      <button type="button" id="btn-toggle-settings" class="btn-icon" title="Server Settings">⚙️</button>
+    </header>
+
+    <!-- Server Settings Panel (Collapsible) -->
+    <div id="settings-panel" class="settings-panel" style="display: none;">
+      <label class="setting-label">Server Domain / URL:</label>
+      <div class="server-input-row">
+        <input type="text" id="server-url-input" placeholder="http://127.0.0.1:5000" />
+        <button type="button" id="btn-save-server" class="btn-save">Save</button>
+      </div>
+      <div class="server-status-row">
+        <span class="status-dot" id="server-status-dot"></span>
+        <span class="status-text" id="server-status-text">Checking server...</span>
+      </div>
+    </div>
+
+    <!-- Active Tab Info -->
+    <div class="tab-card">
+      <div class="tab-card-header">
+        <span id="tab-platform-badge" class="platform-badge">Web Video</span>
+        <span id="tab-status-label" class="status-label">Active Tab</span>
+      </div>
+      <div id="tab-title" class="tab-title">Loading current page...</div>
+      <div id="tab-url" class="tab-url">https://...</div>
+    </div>
+
+    <!-- Mode Selector -->
+    <div class="format-toggle">
+      <button type="button" id="tab-opt-video" class="opt-btn active" data-mode="video">🎥 Video (MP4)</button>
+      <button type="button" id="tab-opt-audio" class="opt-btn" data-mode="audio">🎵 Audio (MP3)</button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-row">
+      <button type="button" id="btn-download-now" class="btn-primary">
+        <span>⚡ Download Current Video</span>
+      </button>
+      <button type="button" id="btn-open-studio" class="btn-secondary">
+        <span>Open Rhamify Studio</span>
+      </button>
+    </div>
+
+    <!-- Toast Notification inside popup -->
+    <div id="popup-toast" class="popup-toast" style="display: none;"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

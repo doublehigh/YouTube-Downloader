@@ -118,6 +118,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseSupportedSites = document.getElementById('btn-close-supported-sites');
   const sitesSearchInput = document.getElementById('sites-search-input');
 
+  // 1-Click Tools & Bookmarklet Elements
+  const btnToggleTools = document.getElementById('btn-toggle-tools');
+  const toolsModal = document.getElementById('tools-modal');
+  const btnCloseTools = document.getElementById('btn-close-tools');
+  const bookmarkletLink = document.getElementById('bookmarklet-link');
+  const btnCopyBookmarklet = document.getElementById('btn-copy-bookmarklet');
+  const extServerEndpoint = document.getElementById('ext-server-endpoint');
+
+  // Clipboard Watcher Elements
+  const clipboardBanner = document.getElementById('clipboard-banner');
+  const clipboardPlatformIcon = document.getElementById('clipboard-platform-icon');
+  const clipboardDetectedUrl = document.getElementById('clipboard-detected-url');
+  const btnClipboardDownload = document.getElementById('btn-clipboard-download');
+  const btnClipboardInspect = document.getElementById('btn-clipboard-inspect');
+  const btnClipboardDismiss = document.getElementById('btn-clipboard-dismiss');
+  const settingAutoClipboard = document.getElementById('setting-auto-clipboard');
+  const chkAutoClipboardTool = document.getElementById('chk-auto-clipboard-tool');
+  let isAutoClipboardEnabled = localStorage.getItem('auto_clipboard') !== 'false'; // default true
+  let lastHandledClipboardUrl = '';
+
   // State
   let activeInputMode = 'single'; // 'single' or 'batch'
   let batchMode = 'video'; // 'video' or 'audio'
@@ -226,6 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHistory();
   setupEventListeners();
   checkPendingDownloads();
+  initBookmarkletAndTools();
+  checkUrlParams();
+  setupClipboardWatcher();
 
   // Check if URL requests downloads/folder view
   if (window.location.pathname.includes('/downloads') || window.location.search.includes('view=folder') || window.location.search.includes('tab=folder')) {
@@ -639,6 +662,187 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Failed to clear history', 'error');
       }
     });
+  }
+
+  // --- 1-Click Tools, Dynamic Bookmarklet & Extension Setup ---
+  function initBookmarkletAndTools() {
+    // Crucial: Use window.location.origin so the bookmarklet NEVER uses a hardcoded URL
+    const origin = window.location.origin;
+    if (extServerEndpoint) {
+      extServerEndpoint.textContent = origin;
+    }
+
+    // Generate bookmarklet code dynamically from current origin
+    const bookmarkletCode = `javascript:(function(){var u=window.location.href;window.open('${origin}/?url='+encodeURIComponent(u)+'&autostart=1','_blank');})();`;
+    if (bookmarkletLink) {
+      bookmarkletLink.href = bookmarkletCode;
+      bookmarkletLink.addEventListener('click', (e) => {
+        // Prevent default navigation when clicked directly on the tools page
+        e.preventDefault();
+        showToast('👉 Drag this button to your browser bookmarks bar (Ctrl+Shift+B)', 'info');
+      });
+    }
+
+    if (btnCopyBookmarklet) {
+      btnCopyBookmarklet.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(bookmarkletCode);
+          btnCopyBookmarklet.textContent = 'Copied!';
+          showToast('Bookmarklet code copied to clipboard!', 'success');
+          setTimeout(() => { btnCopyBookmarklet.textContent = 'Copy Bookmarklet Code'; }, 2000);
+        } catch {
+          showToast('Failed to copy. Please drag the button instead.', 'error');
+        }
+      });
+    }
+
+    // Tools Tab Switcher
+    const tabs = document.querySelectorAll('.tools-tab');
+    const panes = {
+      bookmarklet: document.getElementById('tool-pane-bookmarklet'),
+      extension: document.getElementById('tool-pane-extension'),
+      clipboard: document.getElementById('tool-pane-clipboard')
+    };
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        Object.keys(panes).forEach(k => {
+          if (panes[k]) panes[k].style.display = (k === target) ? 'flex' : 'none';
+        });
+      });
+    });
+
+    if (btnToggleTools && toolsModal) {
+      btnToggleTools.addEventListener('click', () => openModal(toolsModal));
+    }
+    if (btnCloseTools && toolsModal) {
+      btnCloseTools.addEventListener('click', () => closeModal(toolsModal));
+      const overlay = toolsModal.querySelector('.modal-overlay');
+      if (overlay) overlay.addEventListener('click', () => closeModal(toolsModal));
+    }
+  }
+
+  // --- URL Parameter Auto-Download & Inspection Handler ---
+  async function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const sharedUrl = params.get('url') || params.get('text') || params.get('link');
+    const autoStart = params.get('autostart') === '1' || params.get('auto') === '1';
+
+    if (sharedUrl && urlInput) {
+      const decoded = decodeURIComponent(sharedUrl).trim();
+      urlInput.value = decoded;
+      updateInputPlatformDetection();
+      showToast('⚡ Video link received! Analyzing...', 'info');
+
+      try {
+        await inspectUrl();
+        if (autoStart) {
+          setTimeout(() => {
+            showToast('🚀 1-Click Launch: Auto-starting download...', 'success');
+            triggerDownload();
+          }, 350);
+        }
+      } catch (err) {
+        console.error('URL parameter auto-inspect failed:', err);
+      }
+    }
+  }
+
+  // --- In-App / Background Clipboard Watcher ---
+  function setupClipboardWatcher() {
+    if (settingAutoClipboard) {
+      settingAutoClipboard.checked = isAutoClipboardEnabled;
+      settingAutoClipboard.addEventListener('change', (e) => {
+        isAutoClipboardEnabled = e.target.checked;
+        localStorage.setItem('auto_clipboard', String(isAutoClipboardEnabled));
+        if (chkAutoClipboardTool) chkAutoClipboardTool.checked = isAutoClipboardEnabled;
+        if (!isAutoClipboardEnabled && clipboardBanner) {
+          clipboardBanner.style.display = 'none';
+        }
+      });
+    }
+
+    if (chkAutoClipboardTool) {
+      chkAutoClipboardTool.checked = isAutoClipboardEnabled;
+      chkAutoClipboardTool.addEventListener('change', (e) => {
+        isAutoClipboardEnabled = e.target.checked;
+        localStorage.setItem('auto_clipboard', String(isAutoClipboardEnabled));
+        if (settingAutoClipboard) settingAutoClipboard.checked = isAutoClipboardEnabled;
+        if (!isAutoClipboardEnabled && clipboardBanner) {
+          clipboardBanner.style.display = 'none';
+        }
+      });
+    }
+
+    if (btnClipboardDismiss) {
+      btnClipboardDismiss.addEventListener('click', () => {
+        if (clipboardBanner) clipboardBanner.style.display = 'none';
+      });
+    }
+
+    if (btnClipboardInspect) {
+      btnClipboardInspect.addEventListener('click', () => {
+        if (lastHandledClipboardUrl && urlInput) {
+          urlInput.value = lastHandledClipboardUrl;
+          updateInputPlatformDetection();
+          if (clipboardBanner) clipboardBanner.style.display = 'none';
+          inspectUrl();
+        }
+      });
+    }
+
+    if (btnClipboardDownload) {
+      btnClipboardDownload.addEventListener('click', async () => {
+        if (lastHandledClipboardUrl && urlInput) {
+          urlInput.value = lastHandledClipboardUrl;
+          updateInputPlatformDetection();
+          if (clipboardBanner) clipboardBanner.style.display = 'none';
+          await inspectUrl();
+          triggerDownload();
+        }
+      });
+    }
+
+    // Trigger check on tab focus and visibility change
+    window.addEventListener('focus', checkClipboard);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkClipboard();
+    });
+  }
+
+  async function checkClipboard() {
+    if (!isAutoClipboardEnabled) return;
+    if (!navigator.clipboard || !navigator.clipboard.readText) return;
+
+    try {
+      const text = (await navigator.clipboard.readText() || '').trim();
+      if (!text) return;
+
+      // Extract URLs from clipboard
+      const urls = extractMediaUrls(text);
+      if (urls.length === 0) return;
+
+      const detected = urls[0];
+      // Skip if it's already the one currently shown or already handled
+      if (detected === lastHandledClipboardUrl) return;
+      if (urlInput && urlInput.value.trim() === detected) return;
+
+      lastHandledClipboardUrl = detected;
+      const plat = detectPlatform(detected);
+
+      if (clipboardBanner && clipboardDetectedUrl) {
+        clipboardDetectedUrl.textContent = detected;
+        if (clipboardPlatformIcon) {
+          clipboardPlatformIcon.textContent = plat ? plat.icon : '📋';
+        }
+        clipboardBanner.style.display = 'flex';
+      }
+    } catch {
+      // Browser permission may be pending; handle silently without breaking execution
+    }
   }
 
   // --- Mode Switching (Single vs Batch) ---
