@@ -85,6 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const settingsModal = document.getElementById('settings-modal');
   const btnCloseSettings = document.getElementById('btn-close-settings');
+  const btnBackSettings = document.getElementById('btn-back-settings');
+  const btnDoneSettings = document.getElementById('btn-done-settings');
+  const settingAutoDeviceDownload = document.getElementById('setting-auto-device-download');
+  const activeStoragePath = document.getElementById('active-storage-path');
   const settingDownloadDir = document.getElementById('setting-download-dir');
   const settingPreferredRes = document.getElementById('setting-preferred-res');
   const settingMaxConcurrent = document.getElementById('setting-max-concurrent');
@@ -116,12 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenSupportedSites = document.getElementById('btn-open-supported-sites');
   const btnMorePlatforms = document.getElementById('btn-more-platforms');
   const btnCloseSupportedSites = document.getElementById('btn-close-supported-sites');
+  const btnBackSupportedSites = document.getElementById('btn-back-supported-sites');
+  const btnDoneSupportedSites = document.getElementById('btn-done-supported-sites');
   const sitesSearchInput = document.getElementById('sites-search-input');
 
   // 1-Click Tools, PWA & Mobile Elements
   const btnToggleTools = document.getElementById('btn-toggle-tools');
   const toolsModal = document.getElementById('tools-modal');
   const btnCloseTools = document.getElementById('btn-close-tools');
+  const btnBackTools = document.getElementById('btn-back-tools');
+  const btnDoneTools = document.getElementById('btn-done-tools');
   const bookmarkletLink = document.getElementById('bookmarklet-link');
   const btnCopyBookmarklet = document.getElementById('btn-copy-bookmarklet');
   const extServerEndpoint = document.getElementById('ext-server-endpoint');
@@ -144,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingAutoClipboard = document.getElementById('setting-auto-clipboard');
   const chkAutoClipboardTool = document.getElementById('chk-auto-clipboard-tool');
   let isAutoClipboardEnabled = localStorage.getItem('auto_clipboard') !== 'false'; // default true
+  let isAutoDeviceDownloadEnabled = localStorage.getItem('auto_device_download') !== 'false'; // default true
   let lastHandledClipboardUrl = '';
 
   // State
@@ -287,6 +296,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       settingDownloadDir.value = data.download_dir || '';
+      if (activeStoragePath) {
+        activeStoragePath.textContent = data.download_dir || 'Default System Downloads folder';
+      }
+      if (settingAutoDeviceDownload) {
+        settingAutoDeviceDownload.checked = isAutoDeviceDownloadEnabled;
+        settingAutoDeviceDownload.onchange = () => {
+          isAutoDeviceDownloadEnabled = settingAutoDeviceDownload.checked;
+          localStorage.setItem('auto_device_download', isAutoDeviceDownloadEnabled);
+          showToast(
+            isAutoDeviceDownloadEnabled 
+              ? '✓ Automatic download to device Downloads folder enabled' 
+              : 'Automatic download to device disabled', 
+            'info'
+          );
+        };
+      }
       if (settingPreferredRes) {
         settingPreferredRes.value = preferredResolution;
       }
@@ -568,6 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnToggleSettings.addEventListener('click', () => openModal(settingsModal));
     btnCloseSettings.addEventListener('click', () => closeModal(settingsModal));
+    if (btnBackSettings) btnBackSettings.addEventListener('click', () => closeModal(settingsModal));
+    if (btnDoneSettings) btnDoneSettings.addEventListener('click', () => closeModal(settingsModal));
     settingsModal.querySelector('.modal-overlay').addEventListener('click', () => closeModal(settingsModal));
 
     // Supported Sites Modal Listeners
@@ -579,6 +606,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (btnCloseSupportedSites && supportedSitesModal) {
       btnCloseSupportedSites.addEventListener('click', () => closeModal(supportedSitesModal));
+    }
+    if (btnBackSupportedSites && supportedSitesModal) {
+      btnBackSupportedSites.addEventListener('click', () => closeModal(supportedSitesModal));
+    }
+    if (btnDoneSupportedSites && supportedSitesModal) {
+      btnDoneSupportedSites.addEventListener('click', () => closeModal(supportedSitesModal));
+    }
+    if (supportedSitesModal) {
       const overlay = supportedSitesModal.querySelector('.modal-overlay');
       if (overlay) overlay.addEventListener('click', () => closeModal(supportedSitesModal));
     }
@@ -611,7 +646,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('preferred_resolution', preferredResolution);
       }
       const newConcurrent = settingMaxConcurrent ? parseInt(settingMaxConcurrent.value, 10) : 3;
-      if (!newPath) return;
       try {
         const res = await fetch('/api/config', {
           method: 'POST',
@@ -624,6 +658,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (data.success) {
+          if (activeStoragePath) {
+            activeStoragePath.textContent = data.download_dir || 'Default System Downloads folder';
+          }
           showToast('Preferences updated', 'success');
           closeModal(settingsModal);
         } else {
@@ -835,6 +872,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (btnCloseTools && toolsModal) {
       btnCloseTools.addEventListener('click', () => closeModal(toolsModal));
+    }
+    if (btnBackTools && toolsModal) {
+      btnBackTools.addEventListener('click', () => closeModal(toolsModal));
+    }
+    if (btnDoneTools && toolsModal) {
+      btnDoneTools.addEventListener('click', () => closeModal(toolsModal));
+    }
+    if (toolsModal) {
       const overlay = toolsModal.querySelector('.modal-overlay');
       if (overlay) overlay.addEventListener('click', () => closeModal(toolsModal));
     }
@@ -1768,6 +1813,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // Auto-download to device browser Downloads folder helper
+  function triggerDeviceDownload(filename, downloadUrl) {
+    if (!downloadUrl && !filename) return;
+    const url = downloadUrl || `/api/files/serve/${encodeURIComponent(filename)}?download=1`;
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      if (filename) {
+        a.download = filename;
+      } else {
+        a.setAttribute('download', '');
+      }
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 1500);
+      showToast('⬇️ Saving file directly to your device Downloads folder!', 'info');
+    } catch (e) {
+      console.warn('Device download trigger failed:', e);
+    }
+  }
+
   function updateTaskProgress(taskId, task, evtSource) {
     const card = document.getElementById(`task-${taskId}`);
     if (!card) return;
@@ -1879,12 +1948,27 @@ document.addEventListener('DOMContentLoaded', () => {
       if (speedEl) speedEl.textContent = 'Finished';
       if (etaEl) etaEl.textContent = '00:00';
 
+      const dlUrl = task.download_url || (task.filename ? `/api/files/serve/${encodeURIComponent(task.filename)}?download=1` : null);
+
       if (actionsEl) {
         actionsEl.innerHTML = `
+          ${dlUrl ? `
+            <a href="${dlUrl}" download class="btn-task-action btn-task-download" title="Save file directly to your device Downloads folder">
+              ⬇️ Save to Device
+            </a>
+          ` : ''}
           <button class="btn-task-action" onclick="openFileExplorer('${escapeQuotes(task.filepath)}')">
             📂 Show in Folder
           </button>
         `;
+      }
+
+      // Auto-trigger direct download to device Downloads folder if enabled
+      if (isAutoDeviceDownloadEnabled && dlUrl && !task._autoDownloaded) {
+        task._autoDownloaded = true;
+        setTimeout(() => {
+          triggerDeviceDownload(task.filename, dlUrl);
+        }, 400);
       }
 
       runningTasksCount = Math.max(0, runningTasksCount - 1);
@@ -2157,20 +2241,30 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    historyList.innerHTML = items.map(item => `
-      <div class="history-item">
-        <img class="history-thumb" src="${item.thumbnail || ''}" alt="" />
-        <div class="history-info">
-          <div class="history-title" title="${item.title}">${item.title}</div>
-          <div class="history-meta">
-            ${item.type === 'audio' ? '🎵 Audio' : '🎥 ' + item.format} • ${item.timestamp}
+    historyList.innerHTML = items.map(item => {
+      const dlUrl = item.download_url || (item.filename ? `/api/files/serve/${encodeURIComponent(item.filename)}?download=1` : null);
+      return `
+        <div class="history-item">
+          <img class="history-thumb" src="${item.thumbnail || ''}" alt="" />
+          <div class="history-info">
+            <div class="history-title" title="${item.title}">${item.title}</div>
+            <div class="history-meta">
+              ${item.type === 'audio' ? '🎵 Audio' : '🎥 ' + item.format} • ${item.timestamp}
+            </div>
+          </div>
+          <div class="history-actions" style="display:flex; gap:6px; align-items:center; flex-shrink: 0;">
+            ${dlUrl ? `
+              <a href="${dlUrl}" download class="btn-ghost btn-history-dl" title="Save file to your device Downloads folder" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">
+                ⬇️ Save
+              </a>
+            ` : ''}
+            <button class="btn-ghost" style="padding: 4px 8px; font-size: 0.75rem;" onclick="openFileExplorer('${escapeQuotes(item.filepath)}')">
+              Folder
+            </button>
           </div>
         </div>
-        <button class="btn-ghost" style="padding: 4px 8px; font-size: 0.75rem;" onclick="openFileExplorer('${escapeQuotes(item.filepath)}')">
-          Reveal
-        </button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   // Global helper for opening file in explorer and in-app folder drawer

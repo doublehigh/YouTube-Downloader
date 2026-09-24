@@ -1,6 +1,6 @@
 {
-  "download_dir": "C:\\Users\\Rhamify Technology\\Desktop\\YouTube-Downloader\\downloads",
-  "preferred_quality": "720",
+  "download_dir": "",
+  "preferred_quality": "1080",
   "preferred_audio": "mp3",
   "max_concurrent_downloads": 3
 }

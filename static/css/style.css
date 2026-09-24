@@ -1562,16 +1562,21 @@ body {
 .modal-card {
   position: relative;
   z-index: 1;
-  width: 520px;
-  max-width: 90vw;
+  width: 540px;
+  max-width: 92vw;
+  max-height: 86vh;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
   background: #11141e;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 0;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   transform: scale(0.95);
   opacity: 0;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
 .modal.open .modal-card {
@@ -1579,11 +1584,135 @@ body {
   opacity: 1;
 }
 
+/* Modal Drag Pill (Mobile Sheet Handle) */
+.modal-drag-pill {
+  display: none;
+  width: 44px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  margin: 10px auto 2px;
+  flex-shrink: 0;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 20, 30, 0.96);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.btn-modal-back {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-modal-back:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 20, 30, 0.96);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-modal-done {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 14px rgba(255, 0, 51, 0.3);
+}
+
+/* Storage Info Card Styles */
+.storage-info-card {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.storage-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.storage-info-desc {
+  font-size: 12.5px;
+  color: #bae6fd;
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+}
+
+.storage-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #f0f9ff;
+  font-weight: 500;
+}
+
+.advanced-storage-details {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-top: 6px;
+}
+
+.advanced-storage-toggle {
+  font-size: 12px;
+  color: var(--text-faint);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+
+.advanced-storage-toggle:hover {
+  color: var(--text-main);
 }
 
 .form-group {
@@ -4183,5 +4312,106 @@ body {
   color: #38bdf8;
   word-break: break-all;
   display: block;
+}
+
+/* =========================================================
+   Mobile Bottom Sheet Modals & Easy Return
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-bottom: none !important;
+    margin: 0 !important;
+    transform: translateY(50px) !important;
+  }
+
+  .modal.open .modal-card {
+    transform: translateY(0) !important;
+  }
+
+  .modal-drag-pill {
+    display: block !important;
+  }
+
+  .btn-modal-back {
+    display: inline-flex !important;
+  }
+
+  .modal-header {
+    padding: 14px 16px !important;
+  }
+
+  .modal-body {
+    padding: 16px 16px 24px !important;
+  }
+
+  .modal-footer {
+    padding: 12px 16px !important;
+  }
+
+  .btn-modal-done {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* Save to Device Task Action Button */
+.btn-task-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  transition: var(--transition-fast);
+}
+
+.btn-task-download:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(6, 182, 212, 0.35) 100%);
+  color: #fff;
+  border-color: rgba(16, 185, 129, 0.7);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.history-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-history-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-history-dl:hover {
+  background: rgba(56, 189, 248, 0.25);
+  color: #fff;
 }
 

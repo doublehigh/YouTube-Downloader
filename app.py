@@ -14,6 +14,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.parse
 import uuid
 import webbrowser
 from datetime import datetime
@@ -192,11 +193,37 @@ def load_config():
         except Exception:
             pass
     return {
-        "download_dir": str(DEFAULT_DOWNLOAD_DIR),
+        "download_dir": "",
         "preferred_quality": "1080",
         "preferred_audio": "mp3",
         "max_concurrent_downloads": 3,
     }
+
+def get_download_dir():
+    """Dynamically determine the effective download directory on any device / OS (Windows, Linux, Mac, Mobile)."""
+    cfg = load_config()
+    custom_dir = (cfg.get("download_dir") or "").strip()
+    if custom_dir:
+        try:
+            p = Path(custom_dir)
+            p.mkdir(parents=True, exist_ok=True)
+            if p.exists() and p.is_dir():
+                return p.resolve()
+        except Exception:
+            pass
+
+    # Check user system Downloads folder
+    try:
+        user_dl = Path.home() / "Downloads"
+        if user_dl.exists() and user_dl.is_dir():
+            return user_dl.resolve()
+    except Exception:
+        pass
+
+    # Fallback to project downloads folder
+    fallback = BASE_DIR / "downloads"
+    fallback.mkdir(parents=True, exist_ok=True)
+    return fallback.resolve()
 
 def save_config(cfg):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -333,10 +360,11 @@ def service_worker_js():
 @app.route("/api/system-status")
 def system_status():
     cfg = load_config()
+    download_dir = get_download_dir()
     return jsonify({
         "ffmpeg_installed": is_ffmpeg_installed(),
-        "download_dir": cfg.get("download_dir", str(DEFAULT_DOWNLOAD_DIR)),
-        "download_dir_exists": Path(cfg.get("download_dir", "")).exists(),
+        "download_dir": str(download_dir),
+        "download_dir_exists": download_dir.exists(),
         "max_concurrent_downloads": cfg.get("max_concurrent_downloads", DEFAULT_MAX_CONCURRENT),
         "local_ip": get_local_ip(),
     })
@@ -492,7 +520,7 @@ def get_video_info():
 
 def run_download_thread(task_id, url, options):
     cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR)
+    download_dir = get_download_dir()
     download_dir.mkdir(parents=True, exist_ok=True)
 
     is_audio_only = options.get("audio_only", False)
@@ -679,13 +707,29 @@ def run_download_thread(task_id, url, options):
             filepath = tasks[task_id].get("filepath") or str(download_dir / f"{video_title}")
             filename = tasks[task_id].get("filename") or os.path.basename(filepath)
 
-            # Record to history
+            # Verify actual file on disk in case extension changed during post-processing
+            if not (filepath and os.path.exists(filepath)):
+                try:
+                    for cand in download_dir.glob(f"*{re.sub(r'[\\W_]+', '*', video_title[:20])}*"):
+                        if cand.is_file() and cand.suffix not in [".part", ".ytdl", ".temp"]:
+                            filepath = str(cand)
+                            filename = cand.name
+                            break
+                except Exception:
+                    pass
+
+            tasks[task_id]["filepath"] = filepath
+            tasks[task_id]["filename"] = filename
+            tasks[task_id]["download_url"] = f"/api/files/serve/{urllib.parse.quote(filename)}?download=1"
+
+            # Record to history with direct download URL
             add_history_entry({
                 "id": str(uuid.uuid4()),
                 "title": video_title,
                 "url": url,
                 "filename": filename,
                 "filepath": filepath,
+                "download_url": tasks[task_id]["download_url"],
                 "thumbnail": thumb,
                 "type": "audio" if is_audio_only else "video",
                 "format": audio_format if is_audio_only else f"{resolution}p" if resolution else "Best",
@@ -1106,8 +1150,7 @@ def cancel_task(task_id):
     if task_id in pause_events:
         pause_events[task_id].set()
 
-    cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR)
+    download_dir = get_download_dir()
 
     with tasks_lock:
         task = tasks.get(task_id)
@@ -1126,8 +1169,7 @@ def cancel_task(task_id):
 @app.route("/api/tasks/cancel-all", methods=["POST"])
 def cancel_all_tasks():
     """Cancel all active and queued download tasks and clean up incomplete files."""
-    cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR)
+    download_dir = get_download_dir()
 
     cancelled_count = 0
     with tasks_lock:
@@ -1262,8 +1304,7 @@ def format_file_size(num_bytes):
 @app.route("/api/files")
 def list_download_files():
     """List all downloaded files and folders inside the configured download directory."""
-    cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR).resolve()
+    download_dir = get_download_dir()
     if not download_dir.exists():
         download_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1335,8 +1376,7 @@ def list_download_files():
 @app.route("/api/files/serve/<path:filename>")
 def serve_download_file(filename):
     """Stream or download a file directly from the downloads folder."""
-    cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR).resolve()
+    download_dir = get_download_dir()
     return send_from_directory(str(download_dir), filename, as_attachment=request.args.get("download") == "1")
 
 
@@ -1348,8 +1388,7 @@ def delete_download_file():
     if not relpath:
         return jsonify({"error": "No file specified"}), 400
 
-    cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR).resolve()
+    download_dir = get_download_dir()
     target = (download_dir / relpath).resolve()
 
     # Security check: ensure target is within download_dir
@@ -1402,7 +1441,7 @@ def open_file():
     data = request.get_json() or {}
     filepath = (data.get("filepath") or "").strip()
     cfg = load_config()
-    download_dir = Path(cfg.get("download_dir") or DEFAULT_DOWNLOAD_DIR).resolve()
+    download_dir = get_download_dir()
 
     if not filepath:
         target = download_dir

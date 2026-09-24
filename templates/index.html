@@ -615,7 +615,14 @@
     <div id="supported-sites-modal" class="modal">
       <div class="modal-overlay"></div>
       <div class="modal-card supported-sites-modal-card">
+        <div class="modal-drag-pill"></div>
         <div class="modal-header">
+          <button type="button" class="btn-modal-back" id="btn-back-supported-sites" title="Back to App">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Back</span>
+          </button>
           <div class="modal-header-icon-title">
             <span class="modal-header-emoji">🌐</span>
             <div>
@@ -712,6 +719,11 @@
             <span><strong>Pro Tip:</strong> Simply copy any public link from your browser or mobile share menu and paste it directly into the input bar. Rhamify Studio will automatically detect the site and extract the best available quality!</span>
           </div>
         </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-done-supported-sites" class="btn-primary btn-modal-done">
+            ✓ Done &amp; Back to App
+          </button>
+        </div>
       </div>
     </div>
 
@@ -719,18 +731,43 @@
     <div id="settings-modal" class="modal">
       <div class="modal-overlay"></div>
       <div class="modal-card">
+        <div class="modal-drag-pill"></div>
         <div class="modal-header">
+          <button type="button" class="btn-modal-back" id="btn-back-settings" title="Back to App">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Back</span>
+          </button>
           <h3>Preferences</h3>
-          <button id="btn-close-settings" class="btn-icon">✕</button>
+          <button id="btn-close-settings" class="btn-icon" title="Close">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Save Downloads To:</label>
-            <div class="path-input-group">
-              <input type="text" id="setting-download-dir" placeholder="C:\Users\..." />
-              <button id="btn-save-dir" class="btn-secondary">Save</button>
+            <label>📁 Downloads Storage &amp; Device Delivery:</label>
+            <div class="storage-info-card">
+              <div class="storage-info-badge">
+                <span class="storage-badge-icon">⚡</span>
+                <span class="storage-badge-text">Automatic Device Downloads Enabled</span>
+              </div>
+              <p class="storage-info-desc">
+                When a download completes, files automatically download straight into your device's native <strong>Downloads</strong> folder on mobile phones, tablets, and desktop computers.
+              </p>
+              <div class="checkbox-container storage-toggle-row">
+                <input type="checkbox" id="setting-auto-device-download" checked />
+                <span>Auto-save completed videos to this device's Downloads folder</span>
+              </div>
             </div>
-            <p class="form-hint">Files are saved to this folder automatically.</p>
+
+            <!-- Optional Server-Side Storage Folder (For Local Desktop Host) -->
+            <details class="advanced-storage-details">
+              <summary class="advanced-storage-toggle">⚙️ Advanced Server Storage Folder (Host PC)</summary>
+              <div class="path-input-group" style="margin-top: 10px;">
+                <input type="text" id="setting-download-dir" placeholder="Auto (System Downloads)" />
+                <button id="btn-save-dir" class="btn-secondary">Save</button>
+              </div>
+              <p class="form-hint">Customizes where files are kept on the host server disk. Leave blank for auto default.</p>
+            </details>
           </div>
 
           <div class="form-group">
@@ -786,6 +823,11 @@
             </div>
           </div>
         </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-done-settings" class="btn-primary btn-modal-done">
+            ✓ Done &amp; Back to App
+          </button>
+        </div>
       </div>
     </div>
 
@@ -793,7 +835,14 @@
     <div id="tools-modal" class="modal">
       <div class="modal-overlay"></div>
       <div class="modal-card tools-modal-card">
+        <div class="modal-drag-pill"></div>
         <div class="modal-header">
+          <button type="button" class="btn-modal-back" id="btn-back-tools" title="Back to App">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Back</span>
+          </button>
           <div class="modal-header-icon-title">
             <span class="modal-header-emoji">⚡</span>
             <div>
@@ -984,6 +1033,11 @@
               </ol>
             </div>
           </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-done-tools" class="btn-primary btn-modal-done">
+            ✓ Done &amp; Back to App
+          </button>
         </div>
       </div>
     </div>
