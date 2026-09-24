@@ -50,8 +50,14 @@ tasks_lock = threading.Lock()
 # Default yt-dlp extractor args to prevent YouTube's 'This video is not available' / client restrictions
 DEFAULT_EXTRACTOR_ARGS = {
     "youtube": {
-        "player_client": ["android", "web"]
+        "player_client": ["android", "ios", "web"]
     }
+}
+
+DEFAULT_HTTP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Sec-Fetch-Mode": "navigate",
 }
 
 
@@ -426,6 +432,8 @@ def get_video_info():
         "extract_flat": "in_playlist",
         "skip_download": True,
         "extractor_args": DEFAULT_EXTRACTOR_ARGS,
+        "http_headers": DEFAULT_HTTP_HEADERS,
+        "socket_timeout": 30,
     }
 
     try:
@@ -526,6 +534,7 @@ def get_video_info():
             })
 
     except Exception as e:
+        print(f"[!] Error inspecting URL '{url}': {e}", flush=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -605,6 +614,7 @@ def run_download_thread(task_id, url, options):
         "skip_unavailable_fragments": False,
         "socket_timeout": 30,
         "extractor_args": DEFAULT_EXTRACTOR_ARGS,
+        "http_headers": DEFAULT_HTTP_HEADERS,
     }
 
     # Selective playlist items support (e.g. "1,3,5")
