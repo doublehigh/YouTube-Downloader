@@ -19,7 +19,7 @@ import webbrowser
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, Response, jsonify, render_template, request, send_from_directory
+from flask import Flask, Response, jsonify, make_response, render_template, request, send_from_directory
 
 try:
     import yt_dlp
@@ -319,6 +319,16 @@ def format_duration(seconds):
 @app.route("/downloads")
 def index():
     return render_template("index.html")
+
+@app.route("/manifest.json")
+def manifest_json():
+    return send_from_directory("static", "manifest.json", mimetype="application/manifest+json")
+
+@app.route("/sw.js")
+def service_worker_js():
+    response = make_response(send_from_directory("static/js", "sw.js", mimetype="application/javascript"))
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
 
 @app.route("/api/system-status")
 def system_status():

@@ -118,16 +118,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseSupportedSites = document.getElementById('btn-close-supported-sites');
   const sitesSearchInput = document.getElementById('sites-search-input');
 
-  // 1-Click Tools & Bookmarklet Elements
+  // 1-Click Tools, PWA & Mobile Elements
   const btnToggleTools = document.getElementById('btn-toggle-tools');
   const toolsModal = document.getElementById('tools-modal');
   const btnCloseTools = document.getElementById('btn-close-tools');
   const bookmarkletLink = document.getElementById('bookmarklet-link');
   const btnCopyBookmarklet = document.getElementById('btn-copy-bookmarklet');
   const extServerEndpoint = document.getElementById('ext-server-endpoint');
+  const btnPwaInstallNav = document.getElementById('btn-pwa-install');
+  const btnPwaInstallTab = document.getElementById('btn-pwa-install-tab');
+  const iosShortcutUrlDisplay = document.getElementById('ios-shortcut-url-display');
+  const iosRemoteApiDisplay = document.getElementById('ios-remote-api-display');
+  const btnCopyIosUrl = document.getElementById('btn-copy-ios-url');
+  const btnCopyIosRemote = document.getElementById('btn-copy-ios-remote');
+  let deferredInstallPrompt = null;
 
   // Clipboard Watcher Elements
   const clipboardBanner = document.getElementById('clipboard-banner');
+  const clipboardBannerTitle = document.getElementById('clipboard-banner-title');
   const clipboardPlatformIcon = document.getElementById('clipboard-platform-icon');
   const clipboardDetectedUrl = document.getElementById('clipboard-detected-url');
   const btnClipboardDownload = document.getElementById('btn-clipboard-download');
@@ -246,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHistory();
   setupEventListeners();
   checkPendingDownloads();
+  setupPwa();
   initBookmarkletAndTools();
   checkUrlParams();
   setupClipboardWatcher();
@@ -664,13 +673,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- 1-Click Tools, Dynamic Bookmarklet & Extension Setup ---
+  // --- PWA Service Worker & Install Prompt Setup ---
+  function setupPwa() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then((reg) => {
+            console.log('Rhamify PWA Service Worker registered with scope:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('Rhamify PWA Service Worker registration failed:', err);
+          });
+      });
+    }
+
+    // Capture install prompt for PWA install buttons
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      if (btnPwaInstallNav) {
+        btnPwaInstallNav.style.display = 'inline-flex';
+      }
+      if (btnPwaInstallTab) {
+        btnPwaInstallTab.style.display = 'inline-flex';
+        btnPwaInstallTab.disabled = false;
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      if (btnPwaInstallNav) btnPwaInstallNav.style.display = 'none';
+      showToast('🎉 Rhamify Studio App installed! You can now share videos directly from any app.', 'success');
+    });
+  }
+
+  // --- 1-Click Tools, Dynamic Bookmarklet, PWA & iOS Shortcut Setup ---
   function initBookmarkletAndTools() {
-    // Crucial: Use window.location.origin so the bookmarklet NEVER uses a hardcoded URL
+    // Crucial: Use window.location.origin so endpoints NEVER use a hardcoded URL
     const origin = window.location.origin;
     if (extServerEndpoint) {
       extServerEndpoint.textContent = origin;
     }
+
+    // Dynamic iOS Shortcut & Local Wi-Fi Network Setup
+    const updateShortcutEndpoints = (base) => {
+      if (iosShortcutUrlDisplay) {
+        iosShortcutUrlDisplay.textContent = `${base}/?url=[Shortcut Input]&autostart=1`;
+      }
+      if (iosRemoteApiDisplay) {
+        iosRemoteApiDisplay.textContent = `${base}/api/download`;
+      }
+    };
+    updateShortcutEndpoints(origin);
+
+    // Fetch local network IP to assist mobile users connecting over Wi-Fi
+    fetch('/api/system-status')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.local_ip) {
+          const port = window.location.port ? `:${window.location.port}` : '';
+          const wifiBase = `${window.location.protocol}//${data.local_ip}${port}`;
+          if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            updateShortcutEndpoints(wifiBase);
+          }
+        }
+      })
+      .catch(() => {});
 
     // Generate bookmarklet code dynamically from current origin
     const bookmarkletCode = `javascript:(function(){var u=window.location.href;window.open('${origin}/?url='+encodeURIComponent(u)+'&autostart=1','_blank');})();`;
@@ -696,12 +764,59 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Tools Tab Switcher
+    // iOS Shortcut Copy Buttons
+    if (btnCopyIosUrl) {
+      btnCopyIosUrl.addEventListener('click', async () => {
+        const textToCopy = iosShortcutUrlDisplay ? iosShortcutUrlDisplay.textContent : `${origin}/?url=[Shortcut Input]&autostart=1`;
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          btnCopyIosUrl.textContent = 'Copied!';
+          showToast('iOS Safari URL Scheme copied to clipboard!', 'success');
+          setTimeout(() => { btnCopyIosUrl.textContent = '📋 Copy Safari Action URL'; }, 2000);
+        } catch {
+          showToast('Failed to copy text', 'error');
+        }
+      });
+    }
+
+    if (btnCopyIosRemote) {
+      btnCopyIosRemote.addEventListener('click', async () => {
+        const textToCopy = iosRemoteApiDisplay ? iosRemoteApiDisplay.textContent : `${origin}/api/download`;
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          btnCopyIosRemote.textContent = 'Copied!';
+          showToast('Remote API Endpoint copied to clipboard!', 'success');
+          setTimeout(() => { btnCopyIosRemote.textContent = '📋 Copy API Endpoint'; }, 2000);
+        } catch {
+          showToast('Failed to copy text', 'error');
+        }
+      });
+    }
+
+    // PWA Install Handlers
+    const handlePwaInstall = async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('🚀 Installing Rhamify Studio App...', 'success');
+        }
+        deferredInstallPrompt = null;
+      } else {
+        showToast('📱 To install on Mobile: tap browser menu (⋮ or Share) ➡️ "Add to Home screen" / "Install App"!', 'info');
+      }
+    };
+    if (btnPwaInstallNav) btnPwaInstallNav.addEventListener('click', handlePwaInstall);
+    if (btnPwaInstallTab) btnPwaInstallTab.addEventListener('click', handlePwaInstall);
+
+    // Tools Tab Switcher (Bookmarklet, Extension, Clipboard, PWA, iOS)
     const tabs = document.querySelectorAll('.tools-tab');
     const panes = {
       bookmarklet: document.getElementById('tool-pane-bookmarklet'),
       extension: document.getElementById('tool-pane-extension'),
-      clipboard: document.getElementById('tool-pane-clipboard')
+      clipboard: document.getElementById('tool-pane-clipboard'),
+      pwa: document.getElementById('tool-pane-pwa'),
+      ios: document.getElementById('tool-pane-ios')
     };
 
     tabs.forEach(tab => {
@@ -725,17 +840,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- URL Parameter Auto-Download & Inspection Handler ---
+  // --- URL Parameter Auto-Download & Inspection Handler (Handles Web Share Target & Shortcuts) ---
   async function checkUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    const sharedUrl = params.get('url') || params.get('text') || params.get('link');
-    const autoStart = params.get('autostart') === '1' || params.get('auto') === '1';
+    const rawUrl = params.get('url') || '';
+    const rawText = params.get('text') || '';
+    const rawTitle = params.get('title') || '';
+    const rawLink = params.get('link') || '';
+    const autoStart = params.get('autostart') === '1' || params.get('auto') === '1' || params.get('download') === '1';
 
-    if (sharedUrl && urlInput) {
-      const decoded = decodeURIComponent(sharedUrl).trim();
+    // Combine all potential text fields shared from mobile apps (TikTok, Twitter, Instagram, etc.)
+    const combined = [rawUrl, rawText, rawTitle, rawLink].filter(Boolean).join(' ');
+    if (!combined.trim()) return;
+
+    // Use regex to isolate the actual media link from captions, hashtags, and titles
+    const urls = extractMediaUrls(combined);
+    const targetUrl = urls.length > 0 ? urls[0] : (rawUrl || rawLink || combined.trim());
+
+    if (targetUrl && urlInput) {
+      const decoded = decodeURIComponent(targetUrl).trim();
       urlInput.value = decoded;
       updateInputPlatformDetection();
-      showToast('⚡ Video link received! Analyzing...', 'info');
+      const plat = detectPlatform(decoded);
+      const platName = plat ? plat.name : 'Video';
+      showToast(`📱 Received ${platName} link from Share Sheet! Analyzing...`, 'info');
 
       try {
         await inspectUrl();
@@ -751,7 +879,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- In-App / Background Clipboard Watcher ---
+  // --- In-App / Background Clipboard Watcher (1-Tap Focus Experience) ---
   function setupClipboardWatcher() {
     if (settingAutoClipboard) {
       settingAutoClipboard.checked = isAutoClipboardEnabled;
@@ -837,6 +965,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clipboardDetectedUrl.textContent = detected;
         if (clipboardPlatformIcon) {
           clipboardPlatformIcon.textContent = plat ? plat.icon : '📋';
+        }
+        if (clipboardBannerTitle) {
+          clipboardBannerTitle.textContent = plat 
+            ? `${plat.icon} ${plat.name} video detected! Tap to Download` 
+            : 'Copied video link detected';
         }
         clipboardBanner.style.display = 'flex';
       }

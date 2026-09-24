@@ -31,6 +31,12 @@ A lightning-fast, ultra-modern universal video and audio downloader powered by *
   - Web UI: Auto-launches in your default web browser (`http://127.0.0.1:5000`).
   - Desktop Window: Optional frameless native desktop window via `pywebview`.
   - Classic CLI: Full command-line interface retained for scripts and automation with parallel download support (`-j`).
+- **Zero-Friction 1-Click & Mobile Download Tools**:
+  - 📱 **Native Mobile Share Sheet (PWA)**: Installable PWA with Web Share Target API. Watch any video on TikTok, Instagram, Facebook, or Twitter/X, tap **Share ➡️ Rhamify Studio**, and it automatically launches and downloads with zero typing or copy-pasting!
+  - ⚡ **Auto-Detect on Focus (1-Tap Experience)**: Instant clipboard watcher senses copied video links when switching tabs or apps, displaying a floating banner with a 1-tap download button.
+  - 🍏 **iOS Share Sheet Shortcut**: Apple Shortcut integration enabling iPhone and iPad users to tap **Share ➡️ "Download with Rhamify"** straight from native iOS apps or Safari.
+  - 🌟 **1-Click Bookmarklet**: Drag-and-drop browser button to trigger downloads from any webpage with zero extension installation.
+  - 🧩 **Manifest V3 Browser Extension**: In-player button and right-click context menu for Chrome, Edge, and Brave.
 
 ---
 

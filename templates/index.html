@@ -11,6 +11,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- PWA & Mobile Capabilities -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ff0033">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rhamify Studio">
+  <link rel="apple-touch-icon" href="/static/img/icon-192.png">
+
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -60,11 +68,22 @@
         </button>
 
         <!-- 1-Click Tools Button -->
-        <button id="btn-toggle-tools" class="btn-ghost btn-tools-trigger" title="1-Click Download Tools (Bookmarklet &amp; Extension)">
+        <button id="btn-toggle-tools" class="btn-ghost btn-tools-trigger" title="1-Click Download Tools (Bookmarklet, Extension, PWA, iOS)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
           </svg>
           <span class="btn-text">1-Click Tools</span>
+        </button>
+
+        <!-- Install PWA App Button (Appears when installable) -->
+        <button id="btn-pwa-install" class="btn-ghost btn-pwa-nav" style="display: none;" title="Install Rhamify Studio as Mobile / Desktop App">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            <polyline points="9 11 12 14 15 11"></polyline>
+            <line x1="12" y1="7" x2="12" y2="14"></line>
+          </svg>
+          <span class="btn-text">Install App</span>
         </button>
 
         <!-- Settings Button -->
@@ -84,7 +103,7 @@
         <div class="clipboard-banner-left">
           <span class="clipboard-banner-icon" id="clipboard-platform-icon">📋</span>
           <div class="clipboard-banner-info">
-            <span class="clipboard-banner-title">Copied video link detected</span>
+            <span class="clipboard-banner-title" id="clipboard-banner-title">Copied video link detected</span>
             <span class="clipboard-banner-url" id="clipboard-detected-url">https://...</span>
           </div>
         </div>
@@ -799,6 +818,14 @@
               <span>📋 Clipboard Watcher</span>
               <span class="tab-sub">Instant Detection</span>
             </button>
+            <button type="button" class="tools-tab" data-tab="pwa">
+              <span>📱 Mobile PWA</span>
+              <span class="tab-sub">Share Sheet</span>
+            </button>
+            <button type="button" class="tools-tab" data-tab="ios">
+              <span>🍏 iOS Shortcut</span>
+              <span class="tab-sub">iPhone / iPad</span>
+            </button>
           </div>
 
           <!-- Tab Content: Bookmarklet -->
@@ -878,6 +905,82 @@
                 <li><span class="step-num">1</span> Copy any video link (right-click &rarr; "Copy link address" or tap Share &rarr; Copy Link).</li>
                 <li><span class="step-num">2</span> Return to the Rhamify Studio tab.</li>
                 <li><span class="step-num">3</span> A floating banner appears instantly at the top with a <strong>"⚡ Download Now"</strong> button!</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Tab Content: Mobile PWA & Share Target -->
+          <div id="tool-pane-pwa" class="tool-pane" style="display: none;">
+            <div class="tool-hero-box">
+              <div class="tool-hero-tag">Android &bull; Chrome &bull; Edge &bull; Zero Typing</div>
+              <h4>📱 Native Mobile Share Sheet (Web Share Target)</h4>
+              <p class="tool-desc">
+                Transform Rhamify Studio into a native app on your phone. Whenever you are watching a video inside <strong>TikTok, Instagram, Facebook, Twitter (X), or YouTube</strong>, simply tap <strong>Share &rarr; Rhamify Studio</strong>. The app opens immediately with the video link captured and auto-downloads!
+              </p>
+              <div class="pwa-install-action-box">
+                <button type="button" id="btn-pwa-install-tab" class="btn-primary btn-pwa-install-large">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Install Rhamify Studio App</span>
+                </button>
+                <span class="pwa-install-note">On Android/Chrome: Tap the button above or tap browser menu (⋮) &rarr; <strong>"Install app"</strong> / <strong>"Add to Home screen"</strong>.</span>
+              </div>
+            </div>
+
+            <div class="tool-steps">
+              <h5>How to use Native Share Sheet:</h5>
+              <ol class="steps-list">
+                <li><span class="step-num">1</span> While watching any video in TikTok, Instagram, Twitter/X, or Facebook, tap the native <strong>Share</strong> button.</li>
+                <li><span class="step-num">2</span> Tap <strong>Rhamify Studio</strong> in your phone's app list.</li>
+                <li><span class="step-num">3</span> Rhamify Studio opens automatically with the video link captured &mdash; <strong>zero copying, zero pasting!</strong></li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Tab Content: iOS Share Sheet Shortcut -->
+          <div id="tool-pane-ios" class="tool-pane" style="display: none;">
+            <div class="tool-hero-box">
+              <div class="tool-hero-tag">iOS 15+ &bull; iPhone &bull; iPad &bull; Safari</div>
+              <h4>🍏 iOS Share Sheet Shortcut</h4>
+              <p class="tool-desc">
+                Since Apple restricts PWAs on iOS from registering in the system share sheet, Apple's built-in <strong>Shortcuts</strong> app brings 1-tap download capabilities straight into Instagram, TikTok, YouTube, and Safari on iPhone &amp; iPad!
+              </p>
+            </div>
+
+            <div class="ios-shortcut-cards-grid">
+              <div class="ios-shortcut-card">
+                <div class="ios-card-badge">Option 1 &bull; Direct on iPhone</div>
+                <h5>📱 Download on iPhone / iPad</h5>
+                <p>Tapping <strong>Share &rarr; "Download with Rhamify"</strong> opens Rhamify Studio in Mobile Safari and downloads the video directly onto your Apple device.</p>
+                <div class="ios-code-box">
+                  <div class="ios-code-label">Safari Action URL Scheme:</div>
+                  <code id="ios-shortcut-url-display" class="code-pill">Loading...</code>
+                </div>
+                <button type="button" id="btn-copy-ios-url" class="btn-secondary btn-sm">📋 Copy Safari Action URL</button>
+              </div>
+
+              <div class="ios-shortcut-card">
+                <div class="ios-card-badge">Option 2 &bull; Wi-Fi Remote</div>
+                <h5>💻 Remote Download to PC</h5>
+                <p>Send links from your iPhone straight to your PC's download folder over Wi-Fi while relaxing on your couch &mdash; no PC touching required!</p>
+                <div class="ios-code-box">
+                  <div class="ios-code-label">Remote API Endpoint:</div>
+                  <code id="ios-remote-api-display" class="code-pill">Loading...</code>
+                </div>
+                <button type="button" id="btn-copy-ios-remote" class="btn-secondary btn-sm">📋 Copy API Endpoint</button>
+              </div>
+            </div>
+
+            <div class="tool-steps">
+              <h5>Quick 1-Minute Apple Shortcut Setup:</h5>
+              <ol class="steps-list">
+                <li><span class="step-num">1</span> Open the <strong>Shortcuts</strong> app on your iPhone/iPad and tap <strong>+</strong> to create a new shortcut.</li>
+                <li><span class="step-num">2</span> Tap the shortcut name at top &rarr; enable <strong>"Show in Share Sheet"</strong> and set Accepted Types to <strong>URLs &amp; Safari web pages</strong>.</li>
+                <li><span class="step-num">3</span> Add the action <strong>"Open URLs"</strong> and paste the Safari Action URL copied above (with <code class="code-pill">Shortcut Input</code> as the url param).</li>
+                <li><span class="step-num">4</span> Tap Done! Whenever watching any video on Instagram, TikTok, or Twitter, tap <strong>Share &rarr; "Download with Rhamify"</strong>.</li>
               </ol>
             </div>
           </div>
