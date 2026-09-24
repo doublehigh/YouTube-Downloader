@@ -864,6 +864,9 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(panes).forEach(k => {
           if (panes[k]) panes[k].style.display = (k === target) ? 'flex' : 'none';
         });
+        try {
+          tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        } catch (e) {}
       });
     });
 
