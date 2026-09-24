@@ -1455,9 +1455,9 @@ def open_file():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-def open_browser():
+def open_browser(port=5000):
     time.sleep(1.2)
-    webbrowser.open("http://127.0.0.1:5000")
+    webbrowser.open(f"http://127.0.0.1:{port}")
 
 
 if __name__ == "__main__":
@@ -1466,7 +1466,7 @@ if __name__ == "__main__":
     except Exception:
         pass
 
-    port = 5000
+    port = int(os.environ.get("PORT", 5000))
     local_ip = get_local_ip()
     print("\n========================================================")
     print(f"  [+] YouTube Downloader Studio UI is running!")
@@ -1474,8 +1474,9 @@ if __name__ == "__main__":
     print(f"  [*] Mobile/Network: http://{local_ip}:{port}")
     print("========================================================\n")
     
-    # Auto open browser if running directly
-    if "--no-browser" not in sys.argv:
-        threading.Thread(target=open_browser, daemon=True).start()
+    # Auto open browser only if running locally on desktop (not in cloud container)
+    is_cloud = bool(os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RENDER") or os.environ.get("PORT"))
+    if "--no-browser" not in sys.argv and not is_cloud:
+        threading.Thread(target=open_browser, args=(port,), daemon=True).start()
 
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
