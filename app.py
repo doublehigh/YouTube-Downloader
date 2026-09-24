@@ -38,8 +38,16 @@ CONFIG_FILE = BASE_DIR / "config.json"
 HISTORY_FILE = BASE_DIR / "downloads_history.json"
 PENDING_FILE = BASE_DIR / "pending_downloads.json"
 
-# Ensure ffmpeg.exe in BASE_DIR or imageio_ffmpeg is on PATH
-if str(BASE_DIR) not in os.environ.get("PATH", ""):
+# Ensure ffmpeg is on PATH (works cross-platform: Linux, Mac, Windows)
+try:
+    import imageio_ffmpeg
+    ffmpeg_dir = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
+    if ffmpeg_dir and ffmpeg_dir not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+except Exception:
+    pass
+
+if sys.platform.startswith("win") and str(BASE_DIR) not in os.environ.get("PATH", ""):
     os.environ["PATH"] = str(BASE_DIR) + os.pathsep + os.environ.get("PATH", "")
 
 # In-memory download task tracker
@@ -47,12 +55,8 @@ if str(BASE_DIR) not in os.environ.get("PATH", ""):
 tasks = {}
 tasks_lock = threading.Lock()
 
-# Default yt-dlp extractor args to prevent YouTube's 'This video is not available' / client restrictions
-DEFAULT_EXTRACTOR_ARGS = {
-    "youtube": {
-        "player_client": ["android", "ios", "web"]
-    }
-}
+# Default yt-dlp extractor args (keep empty to allow yt-dlp's default client selection)
+DEFAULT_EXTRACTOR_ARGS = {}
 
 DEFAULT_HTTP_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -321,20 +325,32 @@ def add_history_entry(entry):
         json.dump(history, f, indent=2)
 
 def get_ffmpeg_path():
-    """Find ffmpeg.exe from project root, system PATH, or imageio-ffmpeg."""
-    local_ffmpeg = BASE_DIR / "ffmpeg.exe"
-    if local_ffmpeg.exists():
-        return str(local_ffmpeg)
+    """Find ffmpeg from system PATH, imageio-ffmpeg, or project root (Windows only)."""
+    # 1. First, check system PATH (works for Linux/Mac/Windows if installed via package manager)
     system_ffmpeg = shutil.which("ffmpeg")
     if system_ffmpeg:
         return system_ffmpeg
+
+    # 2. Check imageio_ffmpeg (cross-platform, extracts the correct Linux/Mac/Windows executable)
     try:
         import imageio_ffmpeg
         exe = imageio_ffmpeg.get_ffmpeg_exe()
-        if os.path.exists(exe):
+        if exe and os.path.exists(exe):
+            if not sys.platform.startswith("win"):
+                try:
+                    os.chmod(exe, 0o755)
+                except Exception:
+                    pass
             return exe
     except Exception:
         pass
+
+    # 3. On Windows only, check local ffmpeg.exe in project root
+    if sys.platform.startswith("win"):
+        local_ffmpeg = BASE_DIR / "ffmpeg.exe"
+        if local_ffmpeg.exists():
+            return str(local_ffmpeg)
+
     return None
 
 def is_ffmpeg_installed():
