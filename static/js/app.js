@@ -1267,11 +1267,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Inspect URL ---
   async function inspectUrl() {
-    const url = urlInput.value.trim();
+    let url = urlInput.value.trim();
     if (!url) {
       showToast('Please enter or paste a valid video or media link', 'error');
       urlInput.focus();
       return;
+    }
+
+    // Auto-extract clean URL if copied with extra text/captions from mobile apps (TikTok, Instagram, etc.)
+    const cleanUrls = extractMediaUrls(url);
+    if (cleanUrls.length > 0) {
+      url = cleanUrls[0];
+      urlInput.value = url;
     }
 
     // Show loading state

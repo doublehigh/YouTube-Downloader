@@ -199,6 +199,17 @@ def load_config():
         "max_concurrent_downloads": 3,
     }
 
+def sanitize_media_url(text):
+    """Extract clean URL from raw text that may include mobile share captions, titles, or hashtags."""
+    if not text:
+        return ""
+    text = str(text).strip()
+    match = re.search(r'https?://[^\s<>"]+', text)
+    if match:
+        clean = match.group(0).rstrip(".,;!?:)'\"]}")
+        return clean
+    return text
+
 def get_download_dir():
     """Dynamically determine the effective download directory on any device / OS (Windows, Linux, Mac, Mobile)."""
     cfg = load_config()
@@ -405,9 +416,9 @@ def history_endpoint():
 @app.route("/api/info", methods=["POST"])
 def get_video_info():
     data = request.get_json() or {}
-    url = (data.get("url") or "").strip()
+    url = sanitize_media_url(data.get("url") or "")
     if not url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"error": "No valid URL provided"}), 400
 
     ydl_opts = {
         "quiet": True,
@@ -519,6 +530,7 @@ def get_video_info():
 
 
 def run_download_thread(task_id, url, options):
+    url = sanitize_media_url(url)
     cfg = load_config()
     download_dir = get_download_dir()
     download_dir.mkdir(parents=True, exist_ok=True)
@@ -771,9 +783,9 @@ def run_download_thread(task_id, url, options):
 @app.route("/api/download", methods=["POST"])
 def start_download():
     data = request.get_json() or {}
-    url = (data.get("url") or "").strip()
+    url = sanitize_media_url(data.get("url") or "")
     if not url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"error": "No valid URL provided"}), 400
 
     task_id = str(uuid.uuid4())
     # Create pause event (set = running)
@@ -1287,7 +1299,11 @@ def stream_progress(task_id):
 
             time.sleep(0.4)
 
-    return Response(event_generator(), mimetype="text/event-stream")
+    response = Response(event_generator(), mimetype="text/event-stream")
+    response.headers["Cache-Control"] = "no-cache, no-transform"
+    response.headers["X-Accel-Buffering"] = "no"
+    response.headers["Connection"] = "keep-alive"
+    return response
 
 
 def format_file_size(num_bytes):
@@ -1377,7 +1393,17 @@ def list_download_files():
 def serve_download_file(filename):
     """Stream or download a file directly from the downloads folder."""
     download_dir = get_download_dir()
-    return send_from_directory(str(download_dir), filename, as_attachment=request.args.get("download") == "1")
+    unquoted = urllib.parse.unquote(filename)
+    target = download_dir / unquoted
+    file_to_serve = unquoted if target.exists() else filename
+    as_attachment = request.args.get("download") == "1"
+    download_name = os.path.basename(file_to_serve)
+    return send_from_directory(
+        str(download_dir),
+        file_to_serve,
+        as_attachment=as_attachment,
+        download_name=download_name
+    )
 
 
 @app.route("/api/files/delete", methods=["POST"])
