@@ -4043,7 +4043,9 @@ body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
 }
 
 .steps-list li {
@@ -4053,6 +4055,8 @@ body {
   font-size: 13px;
   color: #cbd5e1;
   line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .step-num {
@@ -4064,11 +4068,19 @@ body {
   color: #c084fc;
   font-size: 11px;
   font-weight: 700;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+.step-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .tool-copy-row {
@@ -4276,20 +4288,28 @@ body {
 /* iOS Shortcut Cards Grid */
 .ios-shortcut-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 16px;
 }
 
 .ios-shortcut-card {
   background: rgba(15, 23, 42, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  position: relative;
+  min-width: 0;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.ios-shortcut-card:hover {
+  border-color: rgba(168, 85, 247, 0.35);
 }
 
 .ios-card-badge {
@@ -4297,12 +4317,13 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
-  color: #a855f7;
+  color: #c084fc;
   background: rgba(168, 85, 247, 0.15);
   border: 1px solid rgba(168, 85, 247, 0.3);
   padding: 2px 8px;
   border-radius: 999px;
   align-self: flex-start;
+  line-height: 1.2;
 }
 
 .ios-shortcut-card h5 {
@@ -4310,21 +4331,24 @@ body {
   font-weight: 600;
   color: #fff;
   margin: 0;
+  line-height: 1.3;
 }
 
 .ios-shortcut-card p {
   font-size: 12px;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
-  flex-grow: 1;
 }
 
 .ios-code-box {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
   padding: 8px 10px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ios-code-label {
@@ -4332,15 +4356,31 @@ body {
   font-weight: 600;
   color: var(--text-faint);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
   margin-bottom: 4px;
 }
 
 .ios-code-box code {
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 11px;
   color: #38bdf8;
   word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
   display: block;
+  line-height: 1.4;
+  user-select: all;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.ios-shortcut-card button {
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+  font-size: 12px;
+  padding: 8px 12px;
 }
 
 /* =========================================================
@@ -4553,6 +4593,10 @@ body {
 
   .steps-list li {
     font-size: 12px !important;
+  }
+
+  .step-text {
+    font-size: 12px !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
   }
@@ -4561,7 +4605,7 @@ body {
     grid-template-columns: 1fr !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    gap: 12px !important;
+    gap: 10px !important;
     margin-bottom: 12px !important;
   }
 
